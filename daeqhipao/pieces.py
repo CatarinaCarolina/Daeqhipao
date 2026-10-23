@@ -6,10 +6,9 @@ import pygame
 from daeqhipao.illegal_moves import *
 from daeqhipao.style import *
 from daeqhipao.powers import *
-import images.symbols
 import copy
 
-SYMBOL_DIR = os.path.dirname(images.symbols.__file__)
+SYMBOL_DIR = os.path.join(os.path.dirname(__file__), 'images', 'symbols')
 
 class Pieces:
     def __init__(self, pieces):

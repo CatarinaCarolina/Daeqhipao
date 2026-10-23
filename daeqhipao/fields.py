@@ -1,10 +1,8 @@
 import pygame
 import os
 from daeqhipao.style import *
-import images.conditions
 
-CONDITION_IMAGE_DIR = os.path.dirname(images.conditions.__file__)
-print(CONDITION_IMAGE_DIR)
+CONDITION_IMAGE_DIR = os.path.join(os.path.dirname(__file__), 'images', 'conditions')
 OCEAN_IMAGE = pygame.image.load(os.path.join(CONDITION_IMAGE_DIR, 'ocean.svg'))
 DROUGHT_IMAGE = pygame.image.load(os.path.join(CONDITION_IMAGE_DIR, 'drought.svg'))
 FLAME_IMAGE = pygame.image.load(os.path.join(CONDITION_IMAGE_DIR, 'flame.svg'))

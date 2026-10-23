@@ -1,0 +1,100 @@
+import pygame
+from pygame.locals import *
+
+from daeqhipao.board import Board
+from daeqhipao.pieces import *
+from daeqhipao.players import *
+from daeqhipao.side_panel import SidePanel
+from daeqhipao.buttons import *
+from daeqhipao.turn_management import TurnManager
+from daeqhipao.barriers import BARRIERS
+
+size = 1200, 800
+width, height = size
+GREEN = (150, 255, 150)
+RED = (255, 0, 0)
+WHITE = (255, 255, 255)
+
+
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode(size)
+    screen.fill(WHITE)
+    board = Board(screen)
+    side_panel = SidePanel(screen)
+    board.draw_frame()
+    side_panel.draw_panel()
+
+    active_buttons = make_buttons()
+
+    player_1 = Player(1)
+    player_3 = Player(3)
+
+    player_1.set_field_ownership(board)
+    player_3.set_field_ownership(board)
+
+    piece_1 = Builder(1, player_1)
+    piece_1.set_location((5, 9), board)
+
+    piece_2 = Metamorphosis(2, player_1)
+    piece_2.set_location((3, 9), board)
+
+    piece_3 = Time(3, player_1)
+    piece_3.set_location((4, 9), board)
+
+    piece_4 = Illusion(4, player_1)
+    piece_4.set_location((6, 9), board)
+
+    piece_5 = Earth(5, player_1)
+    piece_5.set_location((7, 9), board)
+
+    piece_6 = Alchemist(6, player_3)
+    piece_6.set_location((5, 1), board)
+
+    piece_7 = Sky(7, player_3)
+    piece_7.set_location((3, 1), board)
+
+    piece_8 = Void(8, player_3)
+    piece_8.set_location((4, 1), board)
+
+    piece_9 = Drought(9, player_3)
+    piece_9.set_location((6, 1), board)
+
+    piece_10 = Flame(10, player_3)
+    piece_10.set_location((7, 1), board)
+
+    #pieces = Pieces([piece_1, piece_2, piece_3, piece_4, piece_5, piece_6, piece_7, piece_8])
+
+    pieces = Pieces([piece_1, piece_2, piece_3, piece_4, piece_5, piece_6, piece_7, piece_8, piece_9, piece_10])
+    players = [player_1, player_3]
+
+    turn_manager = TurnManager(players, board, screen, pieces, BARRIERS)
+
+    running = True
+
+
+    while running:
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                running = False
+
+            elif event.type == MOUSEBUTTONDOWN:
+                mouse = pygame.mouse.get_pos()
+                turn_manager.do_click_action(mouse)
+                print(turn_manager.get_current_state())
+
+        mouse = pygame.mouse.get_pos()
+        if not turn_manager.current_piece:
+            board.highlight_field(mouse)
+        else:
+            if turn_manager.hover:
+                turn_manager.power.highlight_hover(screen, board, turn_manager.current_target_fields, mouse)
+
+        highlight_buttons(turn_manager.active_buttons, screen, mouse)
+        pygame.display.update()
+
+    pygame.quit()
+
+
+if __name__ == "__main__":
+    main()
