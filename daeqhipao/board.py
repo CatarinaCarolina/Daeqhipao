@@ -6,7 +6,6 @@ Gaming board
 import os
 
 import pygame
-import images.pieces
 
 from daeqhipao.illegal_moves import *
 from daeqhipao.board_properties import BOARD_PROPERTIES
@@ -16,8 +15,8 @@ from daeqhipao.barriers import Barrier
 from daeqhipao.pieces import Piece
 
 
-PIECE_IMAGE_DIR = os.path.dirname(images.pieces.__file__)
-IMAGE_DIR = os.path.dirname(images.__file__)
+IMAGE_DIR = os.path.join(os.path.dirname(__file__), 'images')
+PIECE_IMAGE_DIR = os.path.join(IMAGE_DIR, 'pieces')
 LOGO = os.path.join(IMAGE_DIR, 'logo.png')
 BARRIER_LOGO = os.path.join(IMAGE_DIR, 'barrier.png')
 

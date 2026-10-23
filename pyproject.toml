@@ -1,3 +1,23 @@
+[project]
+name = "daeqhipao"
+version = "0.0.1"
+description = "A computer interface to play the Game of Gods."
+readme = "README.md"
+authors = [
+    { name = "Barbara Terlouw", email = "barbara.r.terlouw@gmail.com" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "pygame>=2.6.1",
+]
+
+[project.scripts]
+daeqhipao = "daeqhipao.main:main"
+
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.13.5,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""
+wheel-exclude = ["**/.DS_Store", "**/*.ai"]
