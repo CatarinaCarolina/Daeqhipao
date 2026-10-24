@@ -151,6 +151,7 @@ class Power:
         self.targets_1 = []
         self.targets_2 = []
         self.choice = None
+        self.potency_or_frequency = None
 
     def select_piece_1(self, piece):
         self.selected_piece_1 = piece
@@ -763,6 +764,11 @@ class EarthPower(Power):
         self.confirm_message = "Place barriers here?"
         self.start_with_choice = True
         self.highlight_types = ["hover", "hover"]
+
+    def check_power_usable(self, pieces, barriers, board, players):
+        if not barriers.unused_barriers:
+            return False
+        return super().check_power_usable(pieces, barriers, board, players)
 
     def get_target_fields_1(self, board):
         target_fields = []

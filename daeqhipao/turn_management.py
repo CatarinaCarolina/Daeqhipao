@@ -416,24 +416,27 @@ class TurnManager:
 
         fields_to_redraw = []
 
-        for possible_target in [self.power.selected_piece_1,
-                                self.power.selected_piece_2,
-                                self.power.selected_barrier_1,
-                                self.power.selected_barrier_2,
-                                self.power.selected_field_1,
-                                self.power.selected_field_2]:
-            if possible_target:
-                if type(possible_target) == Field:
-                    fields_to_redraw.append(possible_target)
+        # No power is chosen yet when a god's power menu is open on the first power use
+        if self.power:
+            for possible_target in [self.power.selected_piece_1,
+                                    self.power.selected_piece_2,
+                                    self.power.selected_barrier_1,
+                                    self.power.selected_barrier_2,
+                                    self.power.selected_field_1,
+                                    self.power.selected_field_2]:
+                if possible_target:
+                    if type(possible_target) == Field:
+                        fields_to_redraw.append(possible_target)
 
-                else:
-                    fields_to_redraw.append(possible_target.location)
+                    else:
+                        fields_to_redraw.append(possible_target.location)
 
         fields_to_redraw += self.current_target_fields
 
         hide_piece_buttons(self.screen, self.active_buttons)
 
-        self.power.reset_targets()
+        if self.power:
+            self.power.reset_targets()
         self.has_used_power = False
 
         for field in fields_to_redraw:
@@ -510,20 +513,20 @@ class TurnManager:
         elif state == 'place barrier' or state == 'place barrier start turn':
             if not field.occupied and not field.type == 'temple square':
                 self.place_zaopeng_barrier(field)
-            if state == 'place barrier':
-                self.next_turn()
-            else:
-                self.reset_piece_selection()
-                hide_piece_buttons(self.screen, self.active_buttons)
+                if state == 'place barrier':
+                    self.next_turn()
+                else:
+                    self.reset_piece_selection()
+                    hide_piece_buttons(self.screen, self.active_buttons)
 
         elif state == 'remove barrier' or state == 'remove barrier start turn':
             if field.barrier:
                 self.remove_zaopeng_barrier(field)
-            if state == 'remove barrier':
-                self.next_turn()
-            else:
-                self.reset_piece_selection()
-                hide_piece_buttons(self.screen, self.active_buttons)
+                if state == 'remove barrier':
+                    self.next_turn()
+                else:
+                    self.reset_piece_selection()
+                    hide_piece_buttons(self.screen, self.active_buttons)
 
         elif state == 'select use power or end turn':
             self.random_click()
