@@ -253,6 +253,9 @@ class Board:
         print(string)
 
     def get_field(self, x, y):
+        # Negative indices would wrap around to the opposite edge of the board
+        if x < 0 or y < 0:
+            return None
         try:
             field = self.board[x][y]
             if field.type != 'no field':
