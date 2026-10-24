@@ -277,7 +277,7 @@ class Piece:
         self.union_partners.add(piece)
         for piece_2 in piece.union_partners:
             if not piece_2 == self:
-                self.union_partners.add(piece)
+                self.union_partners.add(piece_2)
 
     def trigger_union(self, pieces, wake_or_sleep):
 
