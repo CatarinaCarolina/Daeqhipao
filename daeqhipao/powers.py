@@ -1,3 +1,5 @@
+"""Powers of the pieces: what each power can target and what it does."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, TypeGuard
@@ -68,6 +70,12 @@ FREQUENCY = {
 
 
 class Power:
+    """Base class of the powers: tracks the targets being selected.
+
+    Args:
+        piece: The piece that has this power.
+    """
+
     # Set by every concrete power class
     name: str
     confirm_message: str
@@ -97,6 +105,7 @@ class Power:
     def check_power_usable(
         self, pieces: Pieces, barriers: Barriers, board: Board, players: list[Player]
     ) -> bool:
+        """Return whether the piece is active and the power has a target."""
         if not self.piece.active:
             return False
         if self.fixed_affected_area:
@@ -106,11 +115,12 @@ class Power:
         return bool(targets)
 
     def set_target_types(self, selection_types: list[str]) -> None:
+        """Set the kinds of target ('piece', 'field' or 'barrier') to select, in order."""
         self.target_nr = len(selection_types)
         self.target_types = selection_types
 
     def highlight_all_targets(self, turn_manager: TurnManager) -> None:
-
+        """Highlight all current targets, or switch the turn manager to hover highlighting."""
         highlight_type = self.get_highlight_type()
         if highlight_type == "highlight all targets":
             turn_manager.board.highlight_fields(
@@ -120,6 +130,7 @@ class Power:
             turn_manager.hover = True
 
     def highlight_selected_fields(self, screen: pygame.Surface, board: Board) -> None:
+        """Highlight the squares of the targets selected so far."""
         fields_to_highlight = []
         if self.selected_field_1:
             fields_to_highlight.append(self.selected_field_1)
@@ -146,6 +157,7 @@ class Power:
         target_fields: list[Field],
         mouse: tuple[int, int],
     ) -> None:
+        """Highlight the target under the mouse; for Ocean and Drought also its neighbours."""
         if self.name == "Ocean" or self.name == "Drought":
             hovered_field = None
             for field in target_fields:
@@ -211,6 +223,7 @@ class Power:
                     board.draw_barrier(field.barrier)
 
     def reset_targets(self) -> None:
+        """Clear the selected targets and choices."""
         self.selected_piece_1 = None
         self.selected_piece_2 = None
         self.selected_field_1 = None
@@ -224,31 +237,41 @@ class Power:
         self.potency_or_frequency = None
 
     def select_piece_1(self, piece: Piece) -> None:
+        """Select the first target piece."""
         self.selected_piece_1 = piece
         self.target_nr -= 1
 
     def select_piece_2(self, piece: Piece) -> None:
+        """Select the second target piece."""
         self.selected_piece_2 = piece
         self.target_nr -= 1
 
     def select_field_1(self, field: Field) -> None:
+        """Select the first target square."""
         self.selected_field_1 = field
         self.target_nr -= 1
 
     def select_field_2(self, field: Field) -> None:
+        """Select the second target square."""
         self.selected_field_2 = field
         self.target_nr -= 1
 
     def select_barrier_1(self, barrier: Barrier) -> None:
+        """Select the first target barrier."""
         self.selected_barrier_1 = barrier
         self.target_nr -= 1
 
     def select_barrier_2(self, barrier: Barrier) -> None:
+        """Select the second target barrier."""
         self.selected_barrier_2 = barrier
         self.target_nr -= 1
 
     def get_choices(self, barriers: Barriers) -> tuple[str | None, str | None]:
+        """Return the choices to offer before selecting targets, None for unused slots.
 
+        Raises:
+            IllegalPower: If Earth or Void can't be used with the current barriers.
+        """
         choice_1 = None
         choice_2 = None
 
@@ -279,26 +302,30 @@ class Power:
         return choice_1, choice_2
 
     def get_target_type(self) -> str:
+        """Return the kind of target to select next."""
         return self.target_types[-self.target_nr]
 
     def get_highlight_type(self) -> str:
+        """Return how to highlight the next targets."""
         return self.highlight_types[-self.target_nr]
 
     # Each power overrides these with its own arguments, as called from
     # get_target_fields and activate_power
     def get_target_fields_1(self, *args: Any, **kwargs: Any) -> list[Field]:
+        """Return the squares that can be chosen as the first target."""
         return []
 
     def get_target_fields_2(self, *args: Any, **kwargs: Any) -> list[Field]:
+        """Return the squares that can be chosen as the second target."""
         return []
 
     def use_power(self, *args: Any, **kwargs: Any) -> None:
-        pass
+        """Apply the power to the selected targets."""
 
     def get_target_fields(
         self, pieces: Pieces, barriers: Barriers, board: Board, players: list[Player]
     ) -> list[Field]:
-
+        """Return the squares that can be selected next, by power and remaining targets."""
         targets = []
 
         if self.name == "Union":
@@ -362,6 +389,7 @@ class Power:
         return targets
 
     def activate_power(self, pieces: Pieces, barriers: Barriers, board: Board) -> None:
+        """Use the power, clear Idea and reset the targets; the piece sleeps unless it has frequency left."""
         if self.name == "Union":
             self.use_power()
         elif self.name == "Impression":
@@ -410,6 +438,8 @@ class Power:
 
 
 class UnionPower(Power):
+    """Link the flip states of two pieces in the same state."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Union"
@@ -418,6 +448,12 @@ class UnionPower(Power):
         self.highlight_types = ["highlight all targets", "highlight all targets"]
 
     def use_power(self) -> None:
+        """Link the two selected pieces.
+
+        Raises:
+            Immune: If a selected piece is immune to Union.
+            IllegalPower: If one piece is active and the other passive.
+        """
         assert self.selected_piece_1 is not None and self.selected_piece_2 is not None
         self.piece.select_piece(self.selected_piece_1, self.piece.name)
         self.piece.select_piece(self.selected_piece_2, self.piece.name)
@@ -429,7 +465,7 @@ class UnionPower(Power):
         self.selected_piece_2.activate_union(self.selected_piece_1)
 
     def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
-
+        """Return other non-immune pieces from the active and passive groups that have at least two."""
         true_active_targets = []
         true_passive_targets = []
 
@@ -452,7 +488,7 @@ class UnionPower(Power):
         return targets
 
     def get_target_fields_2(self, pieces: Pieces) -> list[Field]:
-
+        """Return other non-immune pieces in the same state as the first target."""
         targets = []
 
         assert self.selected_piece_1 is not None
@@ -478,6 +514,8 @@ class UnionPower(Power):
 
 
 class ImpressionPower(Power):
+    """Switch places with another piece outside a temple area."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Impression"
@@ -486,13 +524,18 @@ class ImpressionPower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def use_power(self, board: Board, *args: Any) -> None:
+        """Swap this piece with the selected piece.
+
+        Raises:
+            Immune: If the selected piece is immune to Impression.
+        """
         assert self.selected_piece_1 is not None
         self.piece.select_piece(self.selected_piece_1, self.piece.name)
 
         board.swap_objects(self.piece, self.selected_piece_1)
 
     def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
-
+        """Return other non-immune pieces outside temple areas."""
         targets = []
 
         for piece in pieces.pieces:
@@ -507,6 +550,8 @@ class ImpressionPower(Power):
 
 
 class CommunicationPower(Power):
+    """Give a piece extra moves next turn. Not playable yet: it never has targets."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Communication"
@@ -515,11 +560,14 @@ class CommunicationPower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def use_power(self) -> None:
+        """Give the selected piece Communication."""
         assert self.selected_piece_1 is not None
         self.selected_piece_1.activate_communication(self.piece, self.piece.potency)
 
 
 class FamiliarityPower(Power):
+    """Borrow another piece's power. Not implemented yet."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Familiarity"
@@ -529,6 +577,8 @@ class FamiliarityPower(Power):
 
 
 class LifePower(Power):
+    """Bring a passive piece back to life."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Life"
@@ -537,7 +587,7 @@ class LifePower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
-
+        """Return other passive, non-immune pieces."""
         targets = []
 
         for piece in pieces.pieces:
@@ -547,11 +597,14 @@ class LifePower(Power):
         return targets
 
     def use_power(self, pieces: Pieces) -> None:
+        """Wake the selected piece."""
         assert self.selected_piece_1 is not None
         self.selected_piece_1.wake(pieces)
 
 
 class PerceptionPower(Power):
+    """Make a piece immune. Not playable yet: it never has targets."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Perception"
@@ -560,10 +613,12 @@ class PerceptionPower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def use_power(self) -> None:
+        """Give the selected piece Perception."""
         assert self.selected_piece_1 is not None
         self.selected_piece_1.activate_perception(self.piece)
 
     def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
+        """Return non-immune pieces."""
         target_fields = []
 
         for piece in pieces.pieces:
@@ -573,6 +628,8 @@ class PerceptionPower(Power):
 
 
 class MindPower(Power):
+    """Protect the player's temple from powers."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Mind"
@@ -582,13 +639,17 @@ class MindPower(Power):
         self.fixed_affected_area = True
 
     def use_power(self, board: Board) -> None:
+        """Protect the player's temple square with Mind."""
         board.temple_squares[self.piece.player].mind = True
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
+        """Return the player's temple square."""
         return [board.temple_squares[self.piece.player]]
 
 
 class LegacyPower(Power):
+    """Increase the potency or frequency of a spiritual piece's power."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Legacy"
@@ -598,6 +659,7 @@ class LegacyPower(Power):
         self.start_with_choice = True
 
     def use_power(self) -> None:
+        """Give the selected piece extra potency or frequency, as chosen."""
         if self.potency_or_frequency == "potency":
             assert self.selected_piece_1 is not None
             self.selected_piece_1.set_potency(self.piece)
@@ -607,6 +669,7 @@ class LegacyPower(Power):
             self.selected_piece_1.set_frequency(self.piece)
 
     def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
+        """Return spiritual, non-immune pieces whose power can take the chosen increase."""
         target_fields = []
         for piece in pieces.spiritual_pieces:
             if not piece.immune("Legacy") and (
@@ -625,6 +688,8 @@ class LegacyPower(Power):
 
 
 class TimePower(Power):
+    """Increase the potency or frequency of a physical piece's power."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Time"
@@ -634,6 +699,7 @@ class TimePower(Power):
         self.start_with_choice = True
 
     def use_power(self) -> None:
+        """Give the selected piece extra potency or frequency, as chosen."""
         if self.potency_or_frequency == "potency":
             assert self.selected_piece_1 is not None
             self.selected_piece_1.set_potency(self.piece)
@@ -643,6 +709,7 @@ class TimePower(Power):
             self.selected_piece_1.set_frequency(self.piece)
 
     def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
+        """Return physical, non-immune pieces whose power can take the chosen increase."""
         target_fields = []
         for piece in pieces.physical_pieces:
             if not piece.immune("Time") and (
@@ -661,6 +728,8 @@ class TimePower(Power):
 
 
 class IllusionPower(Power):
+    """Force an opponent's piece to move next turn."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Illusion"
@@ -669,10 +738,15 @@ class IllusionPower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def use_power(self) -> None:
+        """Put Illusion on the selected piece."""
         assert self.selected_piece_1 is not None
         self.selected_piece_1.activate_illusion()
 
     def get_target_fields_1(self, players: list[Player], pieces: Pieces) -> list[Field]:
+        """Return active, non-immune pieces of opponents without Illusion.
+
+        For an opponent with Idea, only their piece with Idea can be chosen.
+        """
         idea_players = []
         legal_players = []
 
@@ -700,6 +774,8 @@ class IllusionPower(Power):
 
 
 class IdeaPower(Power):
+    """Force an opponent's piece to use its power next turn."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Idea"
@@ -708,10 +784,15 @@ class IdeaPower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def use_power(self) -> None:
+        """Put Idea on the selected piece."""
         assert self.selected_piece_1 is not None
         self.selected_piece_1.activate_idea()
 
     def get_target_fields_1(self, players: list[Player], pieces: Pieces) -> list[Field]:
+        """Return active, non-immune pieces of opponents without Idea.
+
+        For an opponent with Illusion, only their piece with Illusion can be chosen.
+        """
         illusion_players = []
         legal_players = []
 
@@ -739,6 +820,8 @@ class IdeaPower(Power):
 
 
 class MetamorphosisPower(Power):
+    """Switch two heirs of the same god group, and their owners."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Metamorphosis"
@@ -747,7 +830,7 @@ class MetamorphosisPower(Power):
         self.highlight_types = ["highlight all targets", "highlight all targets"]
 
     def use_power(self, board: Board, pieces: Pieces) -> None:
-
+        """Swap the squares of the two selected pieces and, if they differ, their players."""
         assert self.selected_piece_1 is not None and self.selected_piece_2 is not None
         original_player_1 = self.selected_piece_1.player
         original_player_2 = self.selected_piece_2.player
@@ -758,7 +841,7 @@ class MetamorphosisPower(Power):
         board.swap_objects(self.selected_piece_1, self.selected_piece_2)
 
     def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
-
+        """Return active, non-immune heirs in god groups with at least two of them."""
         targets = []
 
         for god_group in pieces.god_groups.values():
@@ -774,6 +857,7 @@ class MetamorphosisPower(Power):
         return targets
 
     def get_target_fields_2(self, pieces: Pieces) -> list[Field]:
+        """Return the other active, non-immune heirs in the first target's god group."""
         targets = []
         assert self.selected_piece_1 is not None
         assert self.selected_piece_1.god_group is not None
@@ -789,6 +873,8 @@ class MetamorphosisPower(Power):
 
 
 class DeathPower(Power):
+    """Make an active piece passive."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Death"
@@ -797,7 +883,7 @@ class DeathPower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
-
+        """Return other active, non-immune pieces."""
         targets = []
 
         for piece in pieces.pieces:
@@ -807,11 +893,14 @@ class DeathPower(Power):
         return targets
 
     def use_power(self, pieces: Pieces) -> None:
+        """Put the selected piece to sleep."""
         assert self.selected_piece_1 is not None
         self.selected_piece_1.sleep(pieces)
 
 
 class BlindnessPower(Power):
+    """Stop a piece from moving for two turns. Not implemented yet."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Blindness"
@@ -821,6 +910,8 @@ class BlindnessPower(Power):
 
 
 class OblivionPower(Power):
+    """Stop a piece from resetting at the next Zaopeng. Not implemented yet."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Oblivion"
@@ -830,6 +921,8 @@ class OblivionPower(Power):
 
 
 class LiberationPower(Power):
+    """Stop a piece from using its power for two turns. Not implemented yet."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Liberation"
@@ -841,6 +934,8 @@ class LiberationPower(Power):
 
 
 class EarthPower(Power):
+    """Place one or two barriers on empty squares."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Earth"
@@ -852,11 +947,13 @@ class EarthPower(Power):
     def check_power_usable(
         self, pieces: Pieces, barriers: Barriers, board: Board, players: list[Player]
     ) -> bool:
+        """Return False when no barriers are left, otherwise check for targets as usual."""
         if not barriers.unused_barriers:
             return False
         return super().check_power_usable(pieces, barriers, board, players)
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
+        """Return empty squares that are not temple squares."""
         target_fields = []
 
         for field in board.fields:
@@ -866,6 +963,7 @@ class EarthPower(Power):
         return target_fields
 
     def get_target_fields_2(self, board: Board) -> list[Field]:
+        """Return empty non-temple squares other than the first target."""
         target_fields = []
 
         for field in board.fields:
@@ -879,6 +977,7 @@ class EarthPower(Power):
         return target_fields
 
     def use_power(self, barriers: Barriers, board: Board) -> None:
+        """Place unused barriers on the selected squares."""
         if self.selected_field_1:
             barrier = barriers.unused_barriers[0]
             barrier.place_on_board(self.selected_field_1, board, barriers)
@@ -888,6 +987,8 @@ class EarthPower(Power):
 
 
 class OceanPower(Power):
+    """Flood a square and its neighbours with ocean."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Ocean"
@@ -896,6 +997,7 @@ class OceanPower(Power):
         self.highlight_types = ["hover"]
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
+        """Return squares outside temples and temple areas."""
         target_fields = []
 
         for field in board.fields:
@@ -905,6 +1007,7 @@ class OceanPower(Power):
         return target_fields
 
     def use_power(self, board: Board) -> None:
+        """Put ocean on the selected square and its neighbours, except temple squares."""
         assert self.selected_field_1 is not None
         adjacent_squares = self.selected_field_1.get_adjacent(board)
         self.selected_field_1.activate_ocean(self.piece)
@@ -914,6 +1017,8 @@ class OceanPower(Power):
 
 
 class SkyPower(Power):
+    """Jump over an adjacent piece."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Sky"
@@ -922,10 +1027,12 @@ class SkyPower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def use_power(self, board: Board) -> None:
+        """Move this piece to the selected square."""
         assert self.selected_field_1 is not None
         self.piece.move(self.selected_field_1, board)
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
+        """Return legal squares reached by jumping over an adjacent non-immune piece."""
         adjacent_fields = self.piece.location.get_adjacent(board, type="all")
         adjacent_fields_with_pieces = []
         for adjacent_field in adjacent_fields:
@@ -947,6 +1054,8 @@ class SkyPower(Power):
 
 
 class SunPower(Power):
+    """Move two squares horizontally or vertically."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Sun"
@@ -955,11 +1064,12 @@ class SunPower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def use_power(self, board: Board) -> None:
+        """Move this piece to the selected square."""
         assert self.selected_field_1 is not None
         self.piece.move(self.selected_field_1, board)
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
-
+        """Return legal squares two steps away in a straight line, past a legal square."""
         target_1 = board.get_field(self.piece.location.x + 2, self.piece.location.y)
         target_2 = board.get_field(self.piece.location.x - 2, self.piece.location.y)
         target_3 = board.get_field(self.piece.location.x, self.piece.location.y + 2)
@@ -985,6 +1095,7 @@ class SunPower(Power):
     def check_target(
         self, target_field: Field | None, pass_through_field: Field | None
     ) -> TypeGuard[Field]:
+        """Return whether target_field and the square passed through are legal for this piece."""
         if not target_field:
             return False
         if target_field.type == "no field":
@@ -999,6 +1110,8 @@ class SunPower(Power):
 
 
 class QuakePower(Power):
+    """Move a barrier to an empty square."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Quake"
@@ -1007,10 +1120,12 @@ class QuakePower(Power):
         self.highlight_types = ["highlight all targets", "hover"]
 
     def use_power(self, board: Board) -> None:
+        """Move the selected barrier to the selected square."""
         assert self.selected_barrier_1 is not None and self.selected_field_1 is not None
         self.selected_barrier_1.move(self.selected_field_1, board)
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
+        """Return squares with a barrier."""
         target_fields = []
 
         for field in board.fields:
@@ -1020,6 +1135,7 @@ class QuakePower(Power):
         return target_fields
 
     def get_target_fields_2(self, board: Board) -> list[Field]:
+        """Return empty squares that are not temple squares."""
         target_fields = []
 
         for field in board.fields:
@@ -1030,6 +1146,8 @@ class QuakePower(Power):
 
 
 class WavePower(Power):
+    """Move another piece to an adjacent square."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Wave"
@@ -1038,10 +1156,12 @@ class WavePower(Power):
         self.highlight_types = ["highlight all targets", "highlight all targets"]
 
     def use_power(self, board: Board) -> None:
+        """Move the selected piece to the selected square."""
         assert self.selected_piece_1 is not None and self.selected_field_1 is not None
         self.selected_piece_1.move(self.selected_field_1, board)
 
     def get_target_fields_1(self, board: Board, pieces: Pieces) -> list[Field]:
+        """Return non-immune pieces with a legal adjacent square to move to."""
         target_fields = []
         for piece in pieces.pieces:
             if not piece.immune("Wave"):
@@ -1057,6 +1177,7 @@ class WavePower(Power):
         return target_fields
 
     def get_target_fields_2(self, board: Board) -> list[Field]:
+        """Return legal squares next to the selected piece."""
         target_fields = []
 
         assert self.selected_piece_1 is not None
@@ -1072,6 +1193,8 @@ class WavePower(Power):
 
 
 class WindPower(Power):
+    """Move two squares diagonally."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Wind"
@@ -1080,11 +1203,12 @@ class WindPower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def use_power(self, board: Board) -> None:
+        """Move this piece to the selected square."""
         assert self.selected_field_1 is not None
         self.piece.move(self.selected_field_1, board)
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
-
+        """Return legal squares two steps away diagonally, past a legal square."""
         target_1 = board.get_field(self.piece.location.x + 2, self.piece.location.y + 2)
         target_2 = board.get_field(self.piece.location.x - 2, self.piece.location.y + 2)
         target_3 = board.get_field(self.piece.location.x + 2, self.piece.location.y - 2)
@@ -1110,6 +1234,7 @@ class WindPower(Power):
     def check_target(
         self, target_field: Field | None, pass_through_field: Field | None
     ) -> TypeGuard[Field]:
+        """Return whether target_field and the square passed through are legal for this piece."""
         if not target_field:
             return False
         if target_field.type == "no field":
@@ -1124,6 +1249,8 @@ class WindPower(Power):
 
 
 class ShadowPower(Power):
+    """Jump over an adjacent barrier."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Shadow"
@@ -1132,10 +1259,12 @@ class ShadowPower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def use_power(self, board: Board) -> None:
+        """Move this piece to the selected square."""
         assert self.selected_field_1 is not None
         self.piece.move(self.selected_field_1, board)
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
+        """Return legal squares reached by jumping over an adjacent barrier."""
         adjacent_fields = self.piece.location.get_adjacent(board, type="all")
         adjacent_fields_with_barriers = []
         for adjacent_field in adjacent_fields:
@@ -1157,6 +1286,8 @@ class ShadowPower(Power):
 
 
 class MetalmakerPower(Power):
+    """Move to an adjacent square and leave a barrier behind."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Metalmaker"
@@ -1165,6 +1296,7 @@ class MetalmakerPower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def use_power(self, board: Board, barriers: Barriers) -> None:
+        """Move this piece to the selected square and place a barrier where it was."""
         field_of_origin = board.get_field(self.piece.location.x, self.piece.location.y)
         assert field_of_origin is not None and self.selected_field_1 is not None
         self.piece.move(self.selected_field_1, board)
@@ -1172,6 +1304,7 @@ class MetalmakerPower(Power):
         barrier.place_on_board(field_of_origin, board, barriers)
 
     def get_target_fields_1(self, board: Board, barriers: Barriers) -> list[Field]:
+        """Return legal adjacent squares, if a barrier is available."""
         targets = []
 
         if barriers.unused_barriers:
@@ -1184,6 +1317,8 @@ class MetalmakerPower(Power):
 
 
 class BloodmakerPower(Power):
+    """Switch a barrier with an adjacent piece."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Bloodmaker"
@@ -1192,11 +1327,12 @@ class BloodmakerPower(Power):
         self.highlight_types = ["highlight all targets", "highlight all targets"]
 
     def use_power(self, board: Board) -> None:
+        """Swap the selected barrier and piece."""
         assert self.selected_barrier_1 is not None and self.selected_piece_1 is not None
         board.swap_objects(self.selected_barrier_1, self.selected_piece_1)
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
-
+        """Return squares with a barrier next to a piece it can swap with."""
         targets = []
 
         for field in board.fields:
@@ -1216,6 +1352,7 @@ class BloodmakerPower(Power):
         return targets
 
     def get_target_fields_2(self, board: Board) -> list[Field]:
+        """Return squares next to the selected barrier with a piece it can swap with."""
         targets = []
         assert self.selected_barrier_1 is not None
         assert self.selected_barrier_1.location is not None
@@ -1231,6 +1368,7 @@ class BloodmakerPower(Power):
         return targets
 
     def check_swap_legal(self, barrier: Barrier, piece: Piece) -> bool:
+        """Return whether piece is not immune and may stand on barrier's square."""
         if piece.immune("Bloodmaker"):
             return False
         assert barrier.location is not None
@@ -1238,6 +1376,8 @@ class BloodmakerPower(Power):
 
 
 class FogPower(Power):
+    """Switch two adjacent pieces."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Fog"
@@ -1246,11 +1386,12 @@ class FogPower(Power):
         self.highlight_types = ["highlight all targets", "highlight all targets"]
 
     def use_power(self, board: Board) -> None:
+        """Swap the two selected pieces."""
         assert self.selected_piece_1 is not None and self.selected_piece_2 is not None
         board.swap_objects(self.selected_piece_1, self.selected_piece_2)
 
     def get_target_fields_1(self, board: Board, pieces: Pieces) -> list[Field]:
-
+        """Return non-immune pieces next to a piece they can swap with."""
         targets = []
 
         for piece in pieces.pieces:
@@ -1269,6 +1410,7 @@ class FogPower(Power):
         return targets
 
     def get_target_fields_2(self, board: Board) -> list[Field]:
+        """Return squares next to the first piece with a piece it can swap with."""
         targets = []
         assert self.selected_piece_1 is not None
         adjacent_fields = self.selected_piece_1.location.get_adjacent(board, type="all")
@@ -1281,6 +1423,7 @@ class FogPower(Power):
         return targets
 
     def check_swap_legal(self, piece_1: Piece, piece_2: Piece) -> bool:
+        """Return whether neither piece is immune and each may stand on the other's square."""
         if piece_1.immune("Fog"):
             return False
         if piece_2.immune("Fog"):
@@ -1291,6 +1434,8 @@ class FogPower(Power):
 
 
 class FlamePower(Power):
+    """Set fire to the squares around the piece."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Flame"
@@ -1300,14 +1445,22 @@ class FlamePower(Power):
         self.fixed_affected_area = True
 
     def use_power(self, board: Board) -> None:
+        """Set a flame on every affected square."""
         for field in self.get_affected_fields(board):
             field.activate_flame(self.piece)
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
+        """Return the affected squares."""
         target_fields = self.get_affected_fields(board)
         return target_fields
 
     def get_affected_fields(self, board: Board) -> list[Field]:
+        """Return the squares the flame reaches.
+
+        These are the piece's own square, its neighbours except owned temple
+        squares, and the squares two steps away in a straight line except temple
+        squares.
+        """
         affected_fields = [self.piece.location]
         adjacent_fields = self.piece.location.get_adjacent(board, type="all")
         for field in adjacent_fields:
@@ -1334,6 +1487,8 @@ class FlamePower(Power):
 
 
 class VoidPower(Power):
+    """Remove one or two barriers."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Void"
@@ -1343,6 +1498,7 @@ class VoidPower(Power):
         self.start_with_choice = True
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
+        """Return squares with a barrier."""
         target_fields = []
 
         for field in board.fields:
@@ -1352,6 +1508,7 @@ class VoidPower(Power):
         return target_fields
 
     def get_target_fields_2(self, board: Board) -> list[Field]:
+        """Return squares with a barrier other than the first target."""
         target_fields = []
 
         for field in board.fields:
@@ -1361,6 +1518,7 @@ class VoidPower(Power):
         return target_fields
 
     def use_power(self, barriers: Barriers, board: Board) -> None:
+        """Remove the selected barriers."""
         if self.selected_barrier_1:
             self.selected_barrier_1.remove_from_board(board, barriers)
         if self.selected_barrier_2:
@@ -1368,6 +1526,8 @@ class VoidPower(Power):
 
 
 class DroughtPower(Power):
+    """Put drought on a square and its neighbours."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Drought"
@@ -1376,6 +1536,7 @@ class DroughtPower(Power):
         self.highlight_types = ["hover"]
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
+        """Return squares outside temples and temple areas."""
         target_fields = []
 
         for field in board.fields:
@@ -1385,6 +1546,7 @@ class DroughtPower(Power):
         return target_fields
 
     def use_power(self, board: Board) -> None:
+        """Put drought on the selected square and its neighbours, except temple squares."""
         assert self.selected_field_1 is not None
         adjacent_squares = self.selected_field_1.get_adjacent(board)
         self.selected_field_1.activate_drought(self.piece)
@@ -1394,6 +1556,8 @@ class DroughtPower(Power):
 
 
 class EndPower(Power):
+    """Send a piece back to its temple area."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "End"
@@ -1402,10 +1566,12 @@ class EndPower(Power):
         self.highlight_types = ["highlight all targets", "highlight all targets"]
 
     def use_power(self, board: Board) -> None:
+        """Move the selected piece to the selected square."""
         assert self.selected_piece_1 is not None and self.selected_field_1 is not None
         self.selected_piece_1.move(self.selected_field_1, board)
 
     def get_target_fields_1(self, pieces: Pieces, board: Board) -> list[Field]:
+        """Return non-immune pieces outside temple areas with a free square in their temple area."""
         target_fields = []
         for piece in pieces.pieces:
             if not piece.immune("End") and not piece.location.in_temple_area():
@@ -1418,6 +1584,7 @@ class EndPower(Power):
         return target_fields
 
     def get_target_fields_2(self, board: Board) -> list[Field]:
+        """Return the legal squares in the selected piece's temple area."""
         target_fields = []
         assert self.selected_piece_1 is not None
         temple_area = board.get_temple_area(self.selected_piece_1.player)
@@ -1429,6 +1596,8 @@ class EndPower(Power):
 
 
 class NightPower(Power):
+    """Consume an adjacent barrier and take its place."""
+
     def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Night"
@@ -1437,6 +1606,7 @@ class NightPower(Power):
         self.highlight_types = ["highlight all targets"]
 
     def use_power(self, board: Board, barriers: Barriers) -> None:
+        """Remove the selected barrier and move this piece to its square."""
         assert self.selected_barrier_1 is not None
         assert self.selected_barrier_1.location is not None
         target_location = board.get_field(
@@ -1447,6 +1617,7 @@ class NightPower(Power):
         self.piece.move(target_location, board)
 
     def get_target_fields_1(self, board: Board) -> list[Field]:
+        """Return adjacent squares with a barrier that this piece may stand on."""
         target_fields = []
 
         adjacent_fields = self.piece.location.get_adjacent(board, type="all")

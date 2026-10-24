@@ -1,3 +1,5 @@
+"""Players and their colours, temples and per-turn state."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -11,16 +13,28 @@ if TYPE_CHECKING:
 
 
 class Players:
+    """Look up players by their number."""
+
     def __init__(self, players: list[Player]) -> None:
         self.players: dict[int, Player] = {}
         for player in players:
             self.players[player.id] = player
 
     def get_player(self, player_id: int) -> Player:
+        """Return the player with the given number."""
         return self.players[player_id]
 
 
 class Player:
+    """One of up to four players.
+
+    Args:
+        player_id: Player number, 1 to 4.
+
+    Raises:
+        PlayerError: If player_id is not an int from 1 to 4.
+    """
+
     def __init__(self, player_id: int) -> None:
         if not type(player_id) == int or player_id < 1 or player_id > 4:
             raise PlayerError("illegal number")
@@ -60,22 +74,27 @@ class Player:
             return f"Player {self.id}"
 
     def set_name(self, name: str) -> None:
+        """Set the name shown instead of 'Player <number>'."""
         self.name = name
 
     def set_time_pieces(self, user: Piece) -> None:
+        """Set time_pieces to 3 if user has a legacy duration, otherwise 2."""
         if user.legacy_duration:
             self.time_pieces = 3
         else:
             self.time_pieces = 2
 
     def set_time_count(self) -> None:
+        """Increase the Time counter by one."""
         self.time += 1
 
     def get_all_pieces(self) -> list[Piece | None]:
+        """Return the player's heirs followed by their god."""
         all_pieces = self.heirs + [self.god]
         return all_pieces
 
     def set_field_ownership(self, board: Board) -> None:
+        """Make the player the owner of their temple, starting squares and temple area."""
         x, y = self.temple
         board.board[x][y].set_ownership(self)
         board.temple_squares[self] = board.board[x][y]

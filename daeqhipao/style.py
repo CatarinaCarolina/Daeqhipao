@@ -1,3 +1,5 @@
+"""Colours, sizes and fonts shared by the board, pieces and buttons."""
+
 import math
 
 import pygame

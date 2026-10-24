@@ -1,3 +1,5 @@
+"""Entry point: sets up a two-player game and runs the game loop."""
+
 import pygame
 from pygame.locals import MOUSEBUTTONDOWN, QUIT
 
@@ -29,6 +31,7 @@ WHITE = (255, 255, 255)
 
 
 def main() -> None:
+    """Open the game window and run the game until it is closed."""
     pygame.init()
     screen = pygame.display.set_mode(size)
     screen.fill(WHITE)

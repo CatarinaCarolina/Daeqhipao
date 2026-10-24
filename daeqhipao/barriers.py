@@ -1,3 +1,5 @@
+"""Barriers: up to three blocks that can be placed, moved and removed on the board."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -17,6 +19,12 @@ if TYPE_CHECKING:
 
 
 class Barrier:
+    """A barrier that can occupy one square of the board.
+
+    Args:
+        barrier_id: Unique number of the barrier.
+    """
+
     def __init__(self, barrier_id: int) -> None:
         self.id = barrier_id
         self.on_board = False
@@ -36,12 +44,14 @@ class Barrier:
         return self.id
 
     def set_rectangle(self) -> None:
+        """Compute the barrier's screen rectangle from its location."""
         assert self.location is not None
         x = (1 + self.location.x) * SQUARE_WIDTH + BARRIER_PADDING
         y = (1 + self.location.y) * SQUARE_WIDTH + BARRIER_PADDING
         self.rectangle = pygame.Rect(x, y, BARRIER_SIZE, BARRIER_SIZE)
 
     def place_on_board(self, field: Field, board: Board, barriers: Barriers) -> None:
+        """Place the barrier on field if it is empty and not a temple square, and draw it."""
         if not field.occupied and field.type != "temple square":
             self.on_board = True
             self.location = field
@@ -51,6 +61,7 @@ class Barrier:
             board.draw_barrier(self)
 
     def remove_from_board(self, board: Board, barriers: Barriers) -> None:
+        """Take the barrier off the board and redraw the square it was on."""
         assert self.location is not None
         original_x = self.location.x
         original_y = self.location.y
@@ -67,6 +78,7 @@ class Barrier:
         board.redraw_field(original_field, BACKGROUND_BOARD)
 
     def move(self, field: Field, board: Board) -> None:
+        """Move the barrier to field if it is empty, on the board and not a temple square."""
         if (
             not field.occupied
             and field.type != "temple square"
@@ -93,6 +105,12 @@ class Barrier:
 
 
 class Barriers:
+    """All barriers, split into those on the board and those still available.
+
+    Args:
+        barriers: Every barrier in the game.
+    """
+
     def __init__(self, barriers: list[Barrier]) -> None:
         self.barriers = barriers
         self.used_barriers: list[Barrier] = []
@@ -100,7 +118,7 @@ class Barriers:
         self.set_used_and_unused_barriers()
 
     def set_used_and_unused_barriers(self) -> None:
-
+        """Recompute which barriers are on the board and which are unused."""
         self.used_barriers = []
         self.unused_barriers = []
 

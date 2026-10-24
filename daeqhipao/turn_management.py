@@ -1,3 +1,5 @@
+"""Turn flow: what each click does in each state of a turn."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -36,8 +38,16 @@ if TYPE_CHECKING:
 
 
 class TurnManager:
-    """
-    States
+    """Runs the turns, reacting to clicks according to the current state.
+
+    Args:
+        players: The players, in turn order.
+        board: The board.
+        screen: The pygame surface to draw on.
+        pieces: All pieces.
+        barriers: All barriers.
+
+    States:
         select piece
         select move or use power
         select move
@@ -49,7 +59,6 @@ class TurnManager:
         confirm or reset
         place barrier
         remove barrier
-
     """
 
     def __init__(
@@ -90,18 +99,22 @@ class TurnManager:
         self.hover = False
 
     def reset_states(self) -> None:
+        """Start a new state history at 'select piece'."""
         self.states = ["select piece"]
         self.state_nr = 0
 
     def get_current_state(self) -> str:
+        """Return the current state."""
         state = self.states[-1]
         return state
 
     def get_state(self, state_nr: int) -> str:
+        """Return the state at position state_nr in the history."""
         state = self.states[state_nr]
         return state
 
     def select_target(self, target: Field) -> None:
+        """Select target as the next target of the current power."""
         hide_piece_buttons(self.screen, self.active_buttons)
         show_reset_selection_button(self.screen, self.active_buttons)
         assert self.power is not None and self.current_piece is not None
@@ -130,6 +143,7 @@ class TurnManager:
                 self.power.select_barrier_1(target.barrier)
 
     def penalty_zaopeng(self) -> None:
+        """Force a Zaopeng for the current player and offer a barrier action."""
         hide_piece_buttons(self.screen, self.active_buttons)
         self.pieces.zaopeng(self.current_player)
         for piece in self.pieces.pieces:
@@ -144,7 +158,11 @@ class TurnManager:
         self.new_state("zaopeng")
 
     def zaopeng(self) -> bool:
+        """Wake the current player's pieces if all are passive, and offer a barrier action.
 
+        Returns:
+            Whether a Zaopeng happened.
+        """
         if self.pieces.check_zaopeng(self.current_player):
             hide_piece_buttons(self.screen, self.active_buttons)
             self.pieces.zaopeng(self.current_player)
@@ -165,17 +183,20 @@ class TurnManager:
             return False
 
     def place_zaopeng_barrier(self, field: Field) -> None:
+        """Place an unused barrier on field."""
         barrier_to_place = self.barriers.unused_barriers[0]
         barrier_to_place.place_on_board(field, self.board, self.barriers)
         PLACE_BARRIER_BUTTON.selected = False
 
     def remove_zaopeng_barrier(self, field: Field) -> None:
+        """Remove the barrier on field."""
         barrier_to_remove = field.barrier
         assert barrier_to_remove is not None
         barrier_to_remove.remove_from_board(self.board, self.barriers)
         REMOVE_BARRIER_BUTTON.selected = False
 
     def next_turn(self) -> None:
+        """Count down effects and pass the turn to the next player."""
         hide_piece_buttons(self.screen, self.active_buttons)
 
         self.turn += 1
@@ -202,6 +223,7 @@ class TurnManager:
         self.set_selectable_fields()
 
     def reset_piece_selection(self) -> None:
+        """Deselect the current piece and go back to 'select piece'."""
         if self.current_piece and self.power:
             self.power.reset_targets()
         self.current_piece = None
@@ -210,6 +232,10 @@ class TurnManager:
         self.new_state("select piece")
 
     def set_selectable_fields(self) -> None:
+        """Work out which of the current player's pieces can be selected this turn.
+
+        Applies Idea and Illusion, and the penalty for having no usable power.
+        """
         self.selectable_fields: list[Field] = []
 
         pieces_able_to_use_power = []
@@ -269,6 +295,7 @@ class TurnManager:
             self.current_player.penalty_turns = 2
 
     def select_piece(self, piece: Piece) -> None:
+        """Select piece and show the buttons for what it can do."""
         self.current_piece = piece
         self.movement_options = self.current_piece.get_movement_options(self.board)
         if self.current_piece.idea:
@@ -297,9 +324,11 @@ class TurnManager:
         self.new_state("select move or use power")
 
     def show_movement_options(self) -> None:
+        """Highlight the squares the selected piece can move to."""
         self.board.highlight_fields(self.current_player, self.movement_options)
 
     def display_choices(self) -> None:
+        """Show a button for each choice of the current power."""
         hide_piece_buttons(self.screen, self.active_buttons)
 
         x = int(0.7 * HEIGHT)
@@ -317,7 +346,7 @@ class TurnManager:
                 relative_position += 0.05
 
     def show_power_targets(self) -> None:
-
+        """Highlight the selected targets and the squares that can be selected next."""
         if self.current_target_fields:
             for field in self.current_target_fields:
                 self.board.redraw_field(field, BACKGROUND_BOARD)
@@ -331,6 +360,7 @@ class TurnManager:
         self.power.highlight_all_targets(self)
 
     def show_power_options(self) -> None:
+        """Show a button for each usable power of the selected god."""
         print("er hi?")
         hide_piece_buttons(self.screen, self.active_buttons)
         print(self.active_buttons)
@@ -353,6 +383,10 @@ class TurnManager:
                 relative_position += 0.05
 
     def power_usable_from_square(self, square: Field, piece: Piece) -> bool:
+        """Return whether piece could use a power if it stood on square.
+
+        The piece is moved there temporarily and moved back.
+        """
         square_of_origin = self.board.get_field(piece.location.x, piece.location.y)
         assert square_of_origin is not None
         piece.move(square, self.board)
@@ -378,7 +412,7 @@ class TurnManager:
         return power_usable
 
     def move_piece(self, target_square: Field) -> None:
-
+        """Move the selected piece to target_square and show what it can do next."""
         for field in self.movement_options:
             self.board.redraw_field(field, BACKGROUND_BOARD)
 
@@ -418,6 +452,7 @@ class TurnManager:
         self.board.redraw_field(target_square, colour=HIGHLIGHT_BOARD)
 
     def random_click(self) -> None:
+        """Handle a click that doesn't hit a valid target, resetting the selection if needed."""
         state = self.get_current_state()
 
         if state in {
@@ -452,7 +487,7 @@ class TurnManager:
                 self.reset_piece_selection()
 
     def detect_click_location(self, mouse: tuple[int, int]) -> Button | Field | None:
-
+        """Return the button or square under the mouse, or None."""
         field = self.board.get_mouse_field(mouse)
         button = get_mouse_button(self.active_buttons, mouse)
 
@@ -464,14 +499,17 @@ class TurnManager:
             return None
 
     def new_state(self, state_type: str) -> None:
+        """Move to state_type, keeping the history."""
         self.state_nr += 1
         self.states.append(state_type)
 
     def remove_highlighting_targets(self) -> None:
+        """Remove the highlighting from the current target squares."""
         for field in self.current_target_fields:
             field.highlight_colour(self.screen, self.board, BACKGROUND_BOARD)
 
     def reset_power(self) -> None:
+        """Cancel the current power selection and show the selected piece's options again."""
         self.hover = False
 
         fields_to_redraw = []
@@ -527,7 +565,7 @@ class TurnManager:
             self.new_state("select move or use power")
 
     def do_click_action(self, mouse: tuple[int, int]) -> None:
-
+        """Handle a mouse click at mouse."""
         state = self.get_current_state()
         selected_entity = self.detect_click_location(mouse)
         if selected_entity:
@@ -543,12 +581,14 @@ class TurnManager:
                 self.random_click()
 
     def ask_confirmation(self) -> None:
+        """Show the CONFIRM and RESET SELECTION buttons."""
         hide_piece_buttons(self.screen, self.active_buttons)
         show_confirm_button(self.screen, self.active_buttons)
         show_reset_selection_button(self.screen, self.active_buttons)
         self.new_state("confirm or reset")
 
     def do_field_action(self, field: Field) -> None:
+        """Handle a click on field according to the current state."""
         state = self.get_current_state()
         if state == "select piece":
             if field in self.selectable_fields:
@@ -605,6 +645,7 @@ class TurnManager:
             self.random_click()
 
     def select_power(self, button: PowerButton, mouse: tuple[int, int]) -> None:
+        """Start using the power of the clicked power button."""
         self.power = button.power
         hide_piece_buttons(self.screen, self.active_buttons)
 
@@ -623,6 +664,7 @@ class TurnManager:
                 self.new_state("make choice")
 
     def make_choice(self, button: Button) -> None:
+        """Apply the clicked choice to the current power."""
         assert self.power is not None
         self.power.choice = button.text
         if (
@@ -639,6 +681,7 @@ class TurnManager:
         self.new_state("select power target")
 
     def do_button_action(self, button: Button, mouse: tuple[int, int]) -> None:
+        """Handle a click on button according to the current state."""
         state = self.get_current_state()
         if button.text == "MOVE":
             self.show_movement_options()

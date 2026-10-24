@@ -1,7 +1,11 @@
+"""Colours and square coordinates for each player, keyed by player number (1-4)."""
+
 from typing import ClassVar
 
 
 class PlayerProperties:
+    """Colours, starting squares, temple areas and temple squares per player."""
+
     player_to_colour_rgb: ClassVar[dict[int, tuple[int, int, int]]] = {
         1: (255, 204, 204),
         2: (255, 204, 102),

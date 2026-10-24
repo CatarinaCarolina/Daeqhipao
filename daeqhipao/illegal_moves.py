@@ -1,14 +1,21 @@
+"""Exceptions for actions that break the rules."""
+
+
 class Immune(Exception):
-    pass
+    """Raised when a piece is immune to the power used on it."""
 
 
 class PlayerError(Exception):
+    """Raised for an invalid player number."""
+
     def __init__(self, reason: str) -> None:
         if reason == "illegal number":
             self.message = "Player ID must be 1, 2, 3 or 4!"
 
 
 class IllegalField(Exception):
+    """Raised when a selected square can't be used."""
+
     def __init__(self, reason: str) -> None:
         if reason == "no field":
             self.message = "You selected a field that does not exist!"
@@ -19,6 +26,8 @@ class IllegalField(Exception):
 
 
 class IllegalPiece(Exception):
+    """Raised when a selected piece can't be used."""
+
     def __init__(self, reason: str) -> None:
         if reason == "no god":
             self.message = "This is not a god piece! Please select a god."
@@ -31,6 +40,8 @@ class IllegalPiece(Exception):
 
 
 class IllegalMove(Exception):
+    """Raised when a piece can't move to a square."""
+
     def __init__(self, reason: str) -> None:
         if reason == "board":
             self.message = "This field does not exist!"
@@ -57,6 +68,8 @@ class IllegalMove(Exception):
 
 
 class IllegalPower(Exception):
+    """Raised when a power can't be used as requested."""
+
     def __init__(self, reason: str) -> None:
         if reason == "impression":
             self.message = "Cannot switch places with a piece in a temple area!"
@@ -89,6 +102,8 @@ class IllegalPower(Exception):
 
 
 class IllegalBarrier(Exception):
+    """Raised when a barrier can't be placed or removed."""
+
     def __init__(self, reason: str) -> None:
         if reason == "occupied":
             self.message = "This square is already occupied."

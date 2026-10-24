@@ -1,6 +1,4 @@
-"""
-Gaming board
-"""
+"""Gaming board: the grid of squares and the drawing of pieces and barriers."""
 
 from __future__ import annotations
 
@@ -33,6 +31,12 @@ BARRIER_LOGO = os.path.join(IMAGE_DIR, "barrier.png")
 
 
 class Board:
+    """The 11 x 11 board of squares.
+
+    Args:
+        screen: The pygame surface to draw on.
+    """
+
     def __init__(self, screen: pygame.Surface) -> None:
 
         self.screen = screen
@@ -51,6 +55,7 @@ class Board:
         self.temple_squares: dict[Player, Field] = {}
 
     def draw_frame(self) -> None:
+        """Draw the grid lines of the board and the logo in the centre."""
         self.draw_board_line((5, 0), (6, 0))
         self.draw_board_line((3, 1), (8, 1))
         self.draw_board_line((3, 2), (8, 2))
@@ -83,6 +88,7 @@ class Board:
         self.screen.blit(logo, logo_position)
 
     def draw_board_line(self, start: tuple[int, int], end: tuple[int, int]) -> None:
+        """Draw a line between two grid corners given in square coordinates."""
         start_x, start_y = start
         end_x, end_y = end
 
@@ -95,6 +101,7 @@ class Board:
         pygame.draw.line(self.screen, BLACK, (start_x, start_y), (end_x, end_y))
 
     def get_mouse_field(self, mouse: tuple[int, int]) -> Field | None:
+        """Return the square under the mouse, or None."""
         x = int(mouse[0] / SQUARE_WIDTH) - 1
         y = int(mouse[1] / SQUARE_WIDTH) - 1
 
@@ -107,6 +114,7 @@ class Board:
             return None
 
     def get_temple_area(self, player: Player) -> list[Field]:
+        """Return player's temple area and starting squares."""
         temple_fields = []
         for field in self.fields:
             if field.in_temple_area() and field.owner == player:
@@ -115,6 +123,7 @@ class Board:
         return temple_fields
 
     def draw_barrier(self, barrier: Barrier) -> None:
+        """Draw barrier at its location."""
         barrier_image = pygame.image.load(BARRIER_LOGO)
         barrier_image_scaled = pygame.transform.smoothscale(
             barrier_image, (BARRIER_SIZE, BARRIER_SIZE)
@@ -126,6 +135,7 @@ class Board:
         self.draw_frame()
 
     def highlight_move_options(self, piece: Piece) -> None:
+        """Highlight the squares piece can move to."""
         legal_fields = piece.get_movement_options(self)
         for legal_field in legal_fields:
             legal_field.highlight(self.screen, piece.player, self)
@@ -133,6 +143,7 @@ class Board:
         self.draw_frame()
 
     def redraw_field(self, field: Field, colour: tuple[int, int, int]) -> None:
+        """Redraw field in colour, with its conditions and its piece or barrier."""
         field.redraw(self.screen, colour)
         field.draw_conditions(self.screen)
         if field.piece:
@@ -144,23 +155,26 @@ class Board:
         self.draw_frame()
 
     def highlight_fields(self, player: Player, fields: list[Field]) -> None:
-
+        """Highlight fields in player's light colour."""
         for field in fields:
             field.highlight(self.screen, player, self)
 
         self.draw_frame()
 
     def highlight_fields_strong(self, player: Player, fields: list[Field]) -> None:
+        """Highlight fields in player's strong colour."""
         for field in fields:
             field.highlight_strong(self.screen, player, self)
 
         self.draw_frame()
 
     def highlight_field_strong(self, player: Player, field: Field) -> None:
+        """Highlight field in player's strong colour."""
         field.highlight_strong(self.screen, player, self)
         self.draw_frame()
 
     def set_all_fields(self) -> None:
+        """Collect every square that is part of the board in fields."""
         self.fields: list[Field] = []
         for i, row in enumerate(self.board):
             for j, _column in enumerate(row):
@@ -169,6 +183,7 @@ class Board:
                     self.fields.append(field)
 
     def highlight_field(self, mouse: tuple[int, int]) -> None:
+        """Redraw every square, highlighting the one under the mouse."""
         for field in self.fields:
             if field.rectangle.collidepoint(mouse):
                 hovered = True
@@ -183,19 +198,21 @@ class Board:
                 self.draw_barrier(field.barrier)
 
     def calc_piece_offset(self, field: Field) -> tuple[int, int]:
+        """Return the top-left pixel position of a piece on field."""
         x_offset = (1 + field.x) * SQUARE_WIDTH + PIECE_PADDING
         y_offset = (1 + field.y) * SQUARE_WIDTH + PIECE_PADDING
 
         return x_offset, y_offset
 
     def calc_symbol_offset(self, field: Field) -> tuple[int, int]:
+        """Return the top-left pixel position of a piece's symbol on field."""
         x_offset = (1 + field.x) * SQUARE_WIDTH + SYMBOL_PADDING
         y_offset = (1 + field.y) * SQUARE_WIDTH + SYMBOL_PADDING
 
         return x_offset, y_offset
 
     def draw_piece(self, piece: Piece) -> None:
-
+        """Draw piece's body and symbol; passive pieces get the passive body."""
         piece_type = piece.type.lower()
 
         if not piece.active:
@@ -223,17 +240,19 @@ class Board:
         self.screen.blit(symbol_image_scaled, piece.symbol_rectangle)
 
     def draw_pieces(self) -> None:
+        """Draw every piece on the board."""
         for row in self.board:
             for field in row:
                 if field.piece:
                     self.draw_piece(field.piece)
 
     def draw_board(self) -> None:
+        """Draw the frame and all pieces."""
         self.draw_frame()
         self.draw_pieces()
 
     def assign_field_types(self) -> None:
-
+        """Mark the squares outside the board, starting squares, temple areas and temples."""
         for i, row in enumerate(self.board):
             for j, _column in enumerate(row):
                 if i == 0 or i == 10:
@@ -260,10 +279,12 @@ class Board:
             self.board[x][y].type = "temple square"
 
     def set_rectangles(self) -> None:
+        """Compute the screen rectangle of every square."""
         for field in self.fields:
             field.set_rectangle(SQUARE_WIDTH)
 
     def print_board_type(self) -> None:
+        """Print the type of every square, for debugging."""
         string = ""
         for row in self.board:
             for column in row:
@@ -272,6 +293,7 @@ class Board:
         print(string)
 
     def get_field(self, x: int, y: int) -> Field | None:
+        """Return the square at (x, y), or None if it is not part of the board."""
         # Negative indices would wrap around to the opposite edge of the board
         if x < 0 or y < 0:
             return None
@@ -287,6 +309,7 @@ class Board:
     def swap_objects(
         self, object_1: Piece | Barrier, object_2: Piece | Barrier
     ) -> None:
+        """Swap the squares of two pieces or barriers and redraw them."""
         assert object_1.location is not None and object_2.location is not None
         source_x = object_1.location.x
         source_y = object_1.location.y

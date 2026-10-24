@@ -1,7 +1,11 @@
+"""Coordinates of the special squares of the board."""
+
 from typing import ClassVar
 
 
 class BoardProperties:
+    """Coordinates of all starting squares, temple squares and temple areas."""
+
     starting_squares: ClassVar[list[tuple[int, int]]] = [
         (3, 9),
         (4, 9),
