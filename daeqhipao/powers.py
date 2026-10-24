@@ -151,6 +151,7 @@ class Power:
         self.targets_1 = []
         self.targets_2 = []
         self.choice = None
+        self.potency_or_frequency = None
 
     def select_piece_1(self, piece):
         self.selected_piece_1 = piece
