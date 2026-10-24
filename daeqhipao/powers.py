@@ -1,4 +1,18 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any, TypeGuard
+
 from daeqhipao.illegal_moves import IllegalPower
+
+if TYPE_CHECKING:
+    import pygame
+
+    from daeqhipao.barriers import Barrier, Barriers
+    from daeqhipao.board import Board
+    from daeqhipao.fields import Field
+    from daeqhipao.pieces import Piece, Pieces
+    from daeqhipao.players import Player
+    from daeqhipao.turn_management import TurnManager
 
 POTENCY = {
     "Perception",
@@ -54,30 +68,35 @@ FREQUENCY = {
 
 
 class Power:
-    def __init__(self, piece):
+    # Set by every concrete power class
+    name: str
+    confirm_message: str
+
+    def __init__(self, piece: Piece) -> None:
         self.target_nr = 0
-        self.target_types = []
+        self.target_types: list[str] = []
         self.piece = piece
-        self.name = None
         self.start_with_choice = False
 
-        self.choice = None
-        self.selected_piece_1 = None
-        self.selected_piece_2 = None
-        self.selected_field_1 = None
-        self.selected_field_2 = None
-        self.selected_barrier_1 = None
-        self.selected_barrier_2 = None
+        self.choice: str | None = None
+        self.selected_piece_1: Piece | None = None
+        self.selected_piece_2: Piece | None = None
+        self.selected_field_1: Field | None = None
+        self.selected_field_2: Field | None = None
+        self.selected_barrier_1: Barrier | None = None
+        self.selected_barrier_2: Barrier | None = None
 
-        self.potency_or_frequency = None
+        self.potency_or_frequency: str | None = None
 
-        self.targets_1 = []
-        self.targets_2 = []
-        self.highlight_types = []
+        self.targets_1: list[Field] = []
+        self.targets_2: list[Field] = []
+        self.highlight_types: list[str] = []
 
         self.fixed_affected_area = False
 
-    def check_power_usable(self, pieces, barriers, board, players):
+    def check_power_usable(
+        self, pieces: Pieces, barriers: Barriers, board: Board, players: list[Player]
+    ) -> bool:
         if not self.piece.active:
             return False
         if self.fixed_affected_area:
@@ -86,11 +105,11 @@ class Power:
 
         return bool(targets)
 
-    def set_target_types(self, selection_types):
+    def set_target_types(self, selection_types: list[str]) -> None:
         self.target_nr = len(selection_types)
         self.target_types = selection_types
 
-    def highlight_all_targets(self, turn_manager):
+    def highlight_all_targets(self, turn_manager: TurnManager) -> None:
 
         highlight_type = self.get_highlight_type()
         if highlight_type == "highlight all targets":
@@ -100,7 +119,7 @@ class Power:
         elif highlight_type == "hover":
             turn_manager.hover = True
 
-    def highlight_selected_fields(self, screen, board):
+    def highlight_selected_fields(self, screen: pygame.Surface, board: Board) -> None:
         fields_to_highlight = []
         if self.selected_field_1:
             fields_to_highlight.append(self.selected_field_1)
@@ -111,14 +130,22 @@ class Power:
         if self.selected_piece_2:
             fields_to_highlight.append(self.selected_piece_2.location)
         if self.selected_barrier_1:
+            assert self.selected_barrier_1.location is not None
             fields_to_highlight.append(self.selected_barrier_1.location)
         if self.selected_barrier_2:
+            assert self.selected_barrier_2.location is not None
             fields_to_highlight.append(self.selected_barrier_2.location)
 
         for field in fields_to_highlight:
             field.highlight_strong(screen, self.piece.player, board)
 
-    def highlight_hover(self, screen, board, target_fields, mouse):
+    def highlight_hover(
+        self,
+        screen: pygame.Surface,
+        board: Board,
+        target_fields: list[Field],
+        mouse: tuple[int, int],
+    ) -> None:
         if self.name == "Ocean" or self.name == "Drought":
             hovered_field = None
             for field in target_fields:
@@ -183,7 +210,7 @@ class Power:
                 elif field.barrier:
                     board.draw_barrier(field.barrier)
 
-    def reset_targets(self):
+    def reset_targets(self) -> None:
         self.selected_piece_1 = None
         self.selected_piece_2 = None
         self.selected_field_1 = None
@@ -196,31 +223,31 @@ class Power:
         self.choice = None
         self.potency_or_frequency = None
 
-    def select_piece_1(self, piece):
+    def select_piece_1(self, piece: Piece) -> None:
         self.selected_piece_1 = piece
         self.target_nr -= 1
 
-    def select_piece_2(self, piece):
+    def select_piece_2(self, piece: Piece) -> None:
         self.selected_piece_2 = piece
         self.target_nr -= 1
 
-    def select_field_1(self, field):
+    def select_field_1(self, field: Field) -> None:
         self.selected_field_1 = field
         self.target_nr -= 1
 
-    def select_field_2(self, field):
+    def select_field_2(self, field: Field) -> None:
         self.selected_field_2 = field
         self.target_nr -= 1
 
-    def select_barrier_1(self, barrier):
+    def select_barrier_1(self, barrier: Barrier) -> None:
         self.selected_barrier_1 = barrier
         self.target_nr -= 1
 
-    def select_barrier_2(self, barrier):
+    def select_barrier_2(self, barrier: Barrier) -> None:
         self.selected_barrier_2 = barrier
         self.target_nr -= 1
 
-    def get_choices(self, barriers):
+    def get_choices(self, barriers: Barriers) -> tuple[str | None, str | None]:
 
         choice_1 = None
         choice_2 = None
@@ -251,22 +278,26 @@ class Power:
 
         return choice_1, choice_2
 
-    def get_target_type(self):
+    def get_target_type(self) -> str:
         return self.target_types[-self.target_nr]
 
-    def get_highlight_type(self):
+    def get_highlight_type(self) -> str:
         return self.highlight_types[-self.target_nr]
 
-    def get_target_fields_1(self, *args):
+    # Each power overrides these with its own arguments, as called from
+    # get_target_fields and activate_power
+    def get_target_fields_1(self, *args: Any, **kwargs: Any) -> list[Field]:
+        return []
+
+    def get_target_fields_2(self, *args: Any, **kwargs: Any) -> list[Field]:
+        return []
+
+    def use_power(self, *args: Any, **kwargs: Any) -> None:
         pass
 
-    def get_target_fields_2(self, *args):
-        pass
-
-    def use_power(self, *args):
-        pass
-
-    def get_target_fields(self, pieces, barriers, board, players):
+    def get_target_fields(
+        self, pieces: Pieces, barriers: Barriers, board: Board, players: list[Player]
+    ) -> list[Field]:
 
         targets = []
 
@@ -330,7 +361,7 @@ class Power:
 
         return targets
 
-    def activate_power(self, pieces, barriers, board):
+    def activate_power(self, pieces: Pieces, barriers: Barriers, board: Board) -> None:
         if self.name == "Union":
             self.use_power()
         elif self.name == "Impression":
@@ -379,14 +410,15 @@ class Power:
 
 
 class UnionPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Union"
         self.set_target_types(["piece", "piece"])
         self.confirm_message = "Link the flip states of these pieces?"
         self.highlight_types = ["highlight all targets", "highlight all targets"]
 
-    def use_power(self):
+    def use_power(self) -> None:
+        assert self.selected_piece_1 is not None and self.selected_piece_2 is not None
         self.piece.select_piece(self.selected_piece_1, self.piece.name)
         self.piece.select_piece(self.selected_piece_2, self.piece.name)
 
@@ -396,7 +428,7 @@ class UnionPower(Power):
         self.selected_piece_1.activate_union(self.selected_piece_2)
         self.selected_piece_2.activate_union(self.selected_piece_1)
 
-    def get_target_fields_1(self, pieces):
+    def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
 
         true_active_targets = []
         true_passive_targets = []
@@ -419,10 +451,11 @@ class UnionPower(Power):
 
         return targets
 
-    def get_target_fields_2(self, pieces):
+    def get_target_fields_2(self, pieces: Pieces) -> list[Field]:
 
         targets = []
 
+        assert self.selected_piece_1 is not None
         if self.selected_piece_1.active:
             for piece in pieces.active_pieces:
                 if (
@@ -445,19 +478,20 @@ class UnionPower(Power):
 
 
 class ImpressionPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Impression"
         self.set_target_types(["piece"])
         self.confirm_message = "Switch position with this piece?"
         self.highlight_types = ["highlight all targets"]
 
-    def use_power(self, board, *args):
+    def use_power(self, board: Board, *args: Any) -> None:
+        assert self.selected_piece_1 is not None
         self.piece.select_piece(self.selected_piece_1, self.piece.name)
 
         board.swap_objects(self.piece, self.selected_piece_1)
 
-    def get_target_fields_1(self, pieces):
+    def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
 
         targets = []
 
@@ -473,25 +507,20 @@ class ImpressionPower(Power):
 
 
 class CommunicationPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Communication"
         self.set_target_types(["piece"])
         self.confirm_message = "Give this piece the option to move two extra times next turn (three times in total)_instead of using its power?"
         self.highlight_types = ["highlight all targets"]
 
-    def use_power(self):
+    def use_power(self) -> None:
+        assert self.selected_piece_1 is not None
         self.selected_piece_1.activate_communication(self.piece, self.piece.potency)
-
-    def get_target_fields_1(self, pieces):
-        targets = []
-        for piece in pieces.pieces:
-            if not piece.immune("Communication"):
-                targets.append(piece)
 
 
 class FamiliarityPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Familiarity"
         self.set_target_types(["piece"])
@@ -500,14 +529,14 @@ class FamiliarityPower(Power):
 
 
 class LifePower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Life"
         self.set_target_types(["piece"])
         self.confirm_message = "Bring this piece back to life?"
         self.highlight_types = ["highlight all targets"]
 
-    def get_target_fields_1(self, pieces):
+    def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
 
         targets = []
 
@@ -517,22 +546,24 @@ class LifePower(Power):
 
         return targets
 
-    def use_power(self, pieces):
+    def use_power(self, pieces: Pieces) -> None:
+        assert self.selected_piece_1 is not None
         self.selected_piece_1.wake(pieces)
 
 
 class PerceptionPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Perception"
         self.set_target_types(["piece"])
         self.confirm_message = "Make this piece immune?"
         self.highlight_types = ["highlight all targets"]
 
-    def use_power(self):
+    def use_power(self) -> None:
+        assert self.selected_piece_1 is not None
         self.selected_piece_1.activate_perception(self.piece)
 
-    def get_target_fields_1(self, pieces):
+    def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
         target_fields = []
 
         for piece in pieces.pieces:
@@ -542,7 +573,7 @@ class PerceptionPower(Power):
 
 
 class MindPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Mind"
         self.set_target_types([])
@@ -550,15 +581,15 @@ class MindPower(Power):
         self.highlight_types = []
         self.fixed_affected_area = True
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
         board.temple_squares[self.piece.player].mind = True
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
         return [board.temple_squares[self.piece.player]]
 
 
 class LegacyPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Legacy"
         self.set_target_types(["piece"])
@@ -566,24 +597,27 @@ class LegacyPower(Power):
         self.highlight_types = ["highlight all targets"]
         self.start_with_choice = True
 
-    def use_power(self):
+    def use_power(self) -> None:
         if self.potency_or_frequency == "potency":
+            assert self.selected_piece_1 is not None
             self.selected_piece_1.set_potency(self.piece)
 
         elif self.potency_or_frequency == "frequency":
+            assert self.selected_piece_1 is not None
             self.selected_piece_1.set_frequency(self.piece)
 
-    def get_target_fields_1(self, pieces):
+    def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
         target_fields = []
         for piece in pieces.spiritual_pieces:
             if not piece.immune("Legacy") and (
-                self.potency_or_frequency == "potency"
-                and piece.name in POTENCY
+                (self.potency_or_frequency == "potency" and piece.name in POTENCY)
                 or (
                     self.potency_or_frequency == "frequency" and piece.name in FREQUENCY
                 )
-                or not self.potency_or_frequency
-                and (piece.name in POTENCY or piece.name in FREQUENCY)
+                or (
+                    not self.potency_or_frequency
+                    and (piece.name in POTENCY or piece.name in FREQUENCY)
+                )
             ):
                 target_fields.append(piece.location)
 
@@ -591,7 +625,7 @@ class LegacyPower(Power):
 
 
 class TimePower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Time"
         self.set_target_types(["piece"])
@@ -599,24 +633,27 @@ class TimePower(Power):
         self.highlight_types = ["highlight all targets"]
         self.start_with_choice = True
 
-    def use_power(self):
+    def use_power(self) -> None:
         if self.potency_or_frequency == "potency":
+            assert self.selected_piece_1 is not None
             self.selected_piece_1.set_potency(self.piece)
 
         elif self.potency_or_frequency == "frequency":
+            assert self.selected_piece_1 is not None
             self.selected_piece_1.set_frequency(self.piece)
 
-    def get_target_fields_1(self, pieces):
+    def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
         target_fields = []
         for piece in pieces.physical_pieces:
             if not piece.immune("Time") and (
-                self.potency_or_frequency == "potency"
-                and piece.name in POTENCY
+                (self.potency_or_frequency == "potency" and piece.name in POTENCY)
                 or (
                     self.potency_or_frequency == "frequency" and piece.name in FREQUENCY
                 )
-                or not self.potency_or_frequency
-                and (piece.name in POTENCY or piece.name in FREQUENCY)
+                or (
+                    not self.potency_or_frequency
+                    and (piece.name in POTENCY or piece.name in FREQUENCY)
+                )
             ):
                 target_fields.append(piece.location)
 
@@ -624,17 +661,18 @@ class TimePower(Power):
 
 
 class IllusionPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Illusion"
         self.set_target_types(["piece"])
         self.confirm_message = "Force this piece to move next turn?"
         self.highlight_types = ["highlight all targets"]
 
-    def use_power(self):
+    def use_power(self) -> None:
+        assert self.selected_piece_1 is not None
         self.selected_piece_1.activate_illusion()
 
-    def get_target_fields_1(self, players, pieces):
+    def get_target_fields_1(self, players: list[Player], pieces: Pieces) -> list[Field]:
         idea_players = []
         legal_players = []
 
@@ -662,17 +700,18 @@ class IllusionPower(Power):
 
 
 class IdeaPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Idea"
         self.set_target_types(["piece"])
         self.confirm_message = "Force this piece to use its power next turn?"
         self.highlight_types = ["highlight all targets"]
 
-    def use_power(self):
+    def use_power(self) -> None:
+        assert self.selected_piece_1 is not None
         self.selected_piece_1.activate_idea()
 
-    def get_target_fields_1(self, players, pieces):
+    def get_target_fields_1(self, players: list[Player], pieces: Pieces) -> list[Field]:
         illusion_players = []
         legal_players = []
 
@@ -700,15 +739,16 @@ class IdeaPower(Power):
 
 
 class MetamorphosisPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Metamorphosis"
         self.set_target_types(["piece", "piece"])
         self.confirm_message = "Switch these two pieces and their ownership?"
         self.highlight_types = ["highlight all targets", "highlight all targets"]
 
-    def use_power(self, board, pieces):
+    def use_power(self, board: Board, pieces: Pieces) -> None:
 
+        assert self.selected_piece_1 is not None and self.selected_piece_2 is not None
         original_player_1 = self.selected_piece_1.player
         original_player_2 = self.selected_piece_2.player
 
@@ -717,7 +757,7 @@ class MetamorphosisPower(Power):
             self.selected_piece_2.player = original_player_1
         board.swap_objects(self.selected_piece_1, self.selected_piece_2)
 
-    def get_target_fields_1(self, pieces):
+    def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
 
         targets = []
 
@@ -733,8 +773,10 @@ class MetamorphosisPower(Power):
 
         return targets
 
-    def get_target_fields_2(self, pieces):
+    def get_target_fields_2(self, pieces: Pieces) -> list[Field]:
         targets = []
+        assert self.selected_piece_1 is not None
+        assert self.selected_piece_1.god_group is not None
         for piece in pieces.god_groups[self.selected_piece_1.god_group]:
             if (
                 piece.active
@@ -747,14 +789,14 @@ class MetamorphosisPower(Power):
 
 
 class DeathPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Death"
         self.set_target_types(["piece"])
         self.confirm_message = "Kill this piece?"
         self.highlight_types = ["highlight all targets"]
 
-    def get_target_fields_1(self, pieces):
+    def get_target_fields_1(self, pieces: Pieces) -> list[Field]:
 
         targets = []
 
@@ -764,12 +806,13 @@ class DeathPower(Power):
 
         return targets
 
-    def use_power(self, pieces):
+    def use_power(self, pieces: Pieces) -> None:
+        assert self.selected_piece_1 is not None
         self.selected_piece_1.sleep(pieces)
 
 
 class BlindnessPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Blindness"
         self.set_target_types(["piece"])
@@ -778,7 +821,7 @@ class BlindnessPower(Power):
 
 
 class OblivionPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Oblivion"
         self.set_target_types(["piece"])
@@ -787,7 +830,7 @@ class OblivionPower(Power):
 
 
 class LiberationPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Liberation"
         self.set_target_types(["piece"])
@@ -798,7 +841,7 @@ class LiberationPower(Power):
 
 
 class EarthPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Earth"
         self.set_target_types(["field", "field"])
@@ -806,12 +849,14 @@ class EarthPower(Power):
         self.start_with_choice = True
         self.highlight_types = ["hover", "hover"]
 
-    def check_power_usable(self, pieces, barriers, board, players):
+    def check_power_usable(
+        self, pieces: Pieces, barriers: Barriers, board: Board, players: list[Player]
+    ) -> bool:
         if not barriers.unused_barriers:
             return False
         return super().check_power_usable(pieces, barriers, board, players)
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
         target_fields = []
 
         for field in board.fields:
@@ -820,7 +865,7 @@ class EarthPower(Power):
 
         return target_fields
 
-    def get_target_fields_2(self, board):
+    def get_target_fields_2(self, board: Board) -> list[Field]:
         target_fields = []
 
         for field in board.fields:
@@ -833,7 +878,7 @@ class EarthPower(Power):
 
         return target_fields
 
-    def use_power(self, barriers, board):
+    def use_power(self, barriers: Barriers, board: Board) -> None:
         if self.selected_field_1:
             barrier = barriers.unused_barriers[0]
             barrier.place_on_board(self.selected_field_1, board, barriers)
@@ -843,14 +888,14 @@ class EarthPower(Power):
 
 
 class OceanPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Ocean"
         self.set_target_types(["field"])
         self.confirm_message = "Place ocean here?"
         self.highlight_types = ["hover"]
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
         target_fields = []
 
         for field in board.fields:
@@ -859,7 +904,8 @@ class OceanPower(Power):
 
         return target_fields
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
+        assert self.selected_field_1 is not None
         adjacent_squares = self.selected_field_1.get_adjacent(board)
         self.selected_field_1.activate_ocean(self.piece)
         for adjacent_square in adjacent_squares:
@@ -868,17 +914,18 @@ class OceanPower(Power):
 
 
 class SkyPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Sky"
         self.set_target_types(["field"])
         self.confirm_message = "Jump here?"
         self.highlight_types = ["highlight all targets"]
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
+        assert self.selected_field_1 is not None
         self.piece.move(self.selected_field_1, board)
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
         adjacent_fields = self.piece.location.get_adjacent(board, type="all")
         adjacent_fields_with_pieces = []
         for adjacent_field in adjacent_fields:
@@ -900,17 +947,18 @@ class SkyPower(Power):
 
 
 class SunPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Sun"
         self.set_target_types(["field"])
         self.confirm_message = "Move here?"
         self.highlight_types = ["highlight all targets"]
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
+        assert self.selected_field_1 is not None
         self.piece.move(self.selected_field_1, board)
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
 
         target_1 = board.get_field(self.piece.location.x + 2, self.piece.location.y)
         target_2 = board.get_field(self.piece.location.x - 2, self.piece.location.y)
@@ -934,7 +982,9 @@ class SunPower(Power):
 
         return target_fields
 
-    def check_target(self, target_field, pass_through_field):
+    def check_target(
+        self, target_field: Field | None, pass_through_field: Field | None
+    ) -> TypeGuard[Field]:
         if not target_field:
             return False
         if target_field.type == "no field":
@@ -949,17 +999,18 @@ class SunPower(Power):
 
 
 class QuakePower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Quake"
         self.set_target_types(["barrier", "field"])
         self.confirm_message = "Move barrier here?"
         self.highlight_types = ["highlight all targets", "hover"]
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
+        assert self.selected_barrier_1 is not None and self.selected_field_1 is not None
         self.selected_barrier_1.move(self.selected_field_1, board)
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
         target_fields = []
 
         for field in board.fields:
@@ -968,7 +1019,7 @@ class QuakePower(Power):
 
         return target_fields
 
-    def get_target_fields_2(self, board):
+    def get_target_fields_2(self, board: Board) -> list[Field]:
         target_fields = []
 
         for field in board.fields:
@@ -979,17 +1030,18 @@ class QuakePower(Power):
 
 
 class WavePower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Wave"
         self.set_target_types(["piece", "field"])
         self.confirm_message = "Move piece here?"
         self.highlight_types = ["highlight all targets", "highlight all targets"]
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
+        assert self.selected_piece_1 is not None and self.selected_field_1 is not None
         self.selected_piece_1.move(self.selected_field_1, board)
 
-    def get_target_fields_1(self, board, pieces):
+    def get_target_fields_1(self, board: Board, pieces: Pieces) -> list[Field]:
         target_fields = []
         for piece in pieces.pieces:
             if not piece.immune("Wave"):
@@ -1004,9 +1056,10 @@ class WavePower(Power):
 
         return target_fields
 
-    def get_target_fields_2(self, board):
+    def get_target_fields_2(self, board: Board) -> list[Field]:
         target_fields = []
 
+        assert self.selected_piece_1 is not None
         adjacent_fields = self.selected_piece_1.location.get_adjacent(board, type="all")
 
         for adjacent_field in adjacent_fields:
@@ -1019,17 +1072,18 @@ class WavePower(Power):
 
 
 class WindPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Wind"
         self.set_target_types(["field"])
         self.confirm_message = "Move here?"
         self.highlight_types = ["highlight all targets"]
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
+        assert self.selected_field_1 is not None
         self.piece.move(self.selected_field_1, board)
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
 
         target_1 = board.get_field(self.piece.location.x + 2, self.piece.location.y + 2)
         target_2 = board.get_field(self.piece.location.x - 2, self.piece.location.y + 2)
@@ -1053,7 +1107,9 @@ class WindPower(Power):
 
         return target_fields
 
-    def check_target(self, target_field, pass_through_field):
+    def check_target(
+        self, target_field: Field | None, pass_through_field: Field | None
+    ) -> TypeGuard[Field]:
         if not target_field:
             return False
         if target_field.type == "no field":
@@ -1068,17 +1124,18 @@ class WindPower(Power):
 
 
 class ShadowPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Shadow"
         self.set_target_types(["field"])
         self.confirm_message = "Jump here?"
         self.highlight_types = ["highlight all targets"]
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
+        assert self.selected_field_1 is not None
         self.piece.move(self.selected_field_1, board)
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
         adjacent_fields = self.piece.location.get_adjacent(board, type="all")
         adjacent_fields_with_barriers = []
         for adjacent_field in adjacent_fields:
@@ -1100,20 +1157,21 @@ class ShadowPower(Power):
 
 
 class MetalmakerPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Metalmaker"
         self.set_target_types(["field"])
         self.confirm_message = "Move and leave barrier?"
         self.highlight_types = ["highlight all targets"]
 
-    def use_power(self, board, barriers):
+    def use_power(self, board: Board, barriers: Barriers) -> None:
         field_of_origin = board.get_field(self.piece.location.x, self.piece.location.y)
+        assert field_of_origin is not None and self.selected_field_1 is not None
         self.piece.move(self.selected_field_1, board)
         barrier = barriers.unused_barriers[0]
         barrier.place_on_board(field_of_origin, board, barriers)
 
-    def get_target_fields_1(self, board, barriers):
+    def get_target_fields_1(self, board: Board, barriers: Barriers) -> list[Field]:
         targets = []
 
         if barriers.unused_barriers:
@@ -1126,22 +1184,24 @@ class MetalmakerPower(Power):
 
 
 class BloodmakerPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Bloodmaker"
         self.set_target_types(["barrier", "piece"])
         self.confirm_message = "Switch this barrier with this piece?"
         self.highlight_types = ["highlight all targets", "highlight all targets"]
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
+        assert self.selected_barrier_1 is not None and self.selected_piece_1 is not None
         board.swap_objects(self.selected_barrier_1, self.selected_piece_1)
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
 
         targets = []
 
         for field in board.fields:
             if field.barrier:
+                assert field.barrier.location is not None
                 adjacent_fields = field.barrier.location.get_adjacent(board, type="all")
                 potential_target = False
                 for adjacent_field in adjacent_fields:
@@ -1155,8 +1215,10 @@ class BloodmakerPower(Power):
 
         return targets
 
-    def get_target_fields_2(self, board):
+    def get_target_fields_2(self, board: Board) -> list[Field]:
         targets = []
+        assert self.selected_barrier_1 is not None
+        assert self.selected_barrier_1.location is not None
         adjacent_fields = self.selected_barrier_1.location.get_adjacent(
             board, type="all"
         )
@@ -1168,24 +1230,26 @@ class BloodmakerPower(Power):
 
         return targets
 
-    def check_swap_legal(self, barrier, piece):
+    def check_swap_legal(self, barrier: Barrier, piece: Piece) -> bool:
         if piece.immune("Bloodmaker"):
             return False
+        assert barrier.location is not None
         return barrier.location.permitted_area_condition(piece)
 
 
 class FogPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Fog"
         self.set_target_types(["piece", "piece"])
         self.confirm_message = "Switch these pieces?"
         self.highlight_types = ["highlight all targets", "highlight all targets"]
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
+        assert self.selected_piece_1 is not None and self.selected_piece_2 is not None
         board.swap_objects(self.selected_piece_1, self.selected_piece_2)
 
-    def get_target_fields_1(self, board, pieces):
+    def get_target_fields_1(self, board: Board, pieces: Pieces) -> list[Field]:
 
         targets = []
 
@@ -1204,8 +1268,9 @@ class FogPower(Power):
 
         return targets
 
-    def get_target_fields_2(self, board):
+    def get_target_fields_2(self, board: Board) -> list[Field]:
         targets = []
+        assert self.selected_piece_1 is not None
         adjacent_fields = self.selected_piece_1.location.get_adjacent(board, type="all")
         for adjacent_field in adjacent_fields:
             if adjacent_field.piece and self.check_swap_legal(
@@ -1215,7 +1280,7 @@ class FogPower(Power):
 
         return targets
 
-    def check_swap_legal(self, piece_1, piece_2):
+    def check_swap_legal(self, piece_1: Piece, piece_2: Piece) -> bool:
         if piece_1.immune("Fog"):
             return False
         if piece_2.immune("Fog"):
@@ -1226,7 +1291,7 @@ class FogPower(Power):
 
 
 class FlamePower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Flame"
         self.set_target_types([])
@@ -1234,15 +1299,15 @@ class FlamePower(Power):
         self.highlight_types = []
         self.fixed_affected_area = True
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
         for field in self.get_affected_fields(board):
             field.activate_flame(self.piece)
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
         target_fields = self.get_affected_fields(board)
         return target_fields
 
-    def get_affected_fields(self, board):
+    def get_affected_fields(self, board: Board) -> list[Field]:
         affected_fields = [self.piece.location]
         adjacent_fields = self.piece.location.get_adjacent(board, type="all")
         for field in adjacent_fields:
@@ -1269,7 +1334,7 @@ class FlamePower(Power):
 
 
 class VoidPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Void"
         self.set_target_types(["barrier", "barrier"])
@@ -1277,7 +1342,7 @@ class VoidPower(Power):
         self.highlight_types = ["highlight all targets", "highlight all targets"]
         self.start_with_choice = True
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
         target_fields = []
 
         for field in board.fields:
@@ -1286,7 +1351,7 @@ class VoidPower(Power):
 
         return target_fields
 
-    def get_target_fields_2(self, board):
+    def get_target_fields_2(self, board: Board) -> list[Field]:
         target_fields = []
 
         for field in board.fields:
@@ -1295,7 +1360,7 @@ class VoidPower(Power):
 
         return target_fields
 
-    def use_power(self, barriers, board):
+    def use_power(self, barriers: Barriers, board: Board) -> None:
         if self.selected_barrier_1:
             self.selected_barrier_1.remove_from_board(board, barriers)
         if self.selected_barrier_2:
@@ -1303,14 +1368,14 @@ class VoidPower(Power):
 
 
 class DroughtPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Drought"
         self.set_target_types(["field"])
         self.confirm_message = "Place drought here?"
         self.highlight_types = ["hover"]
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
         target_fields = []
 
         for field in board.fields:
@@ -1319,7 +1384,8 @@ class DroughtPower(Power):
 
         return target_fields
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
+        assert self.selected_field_1 is not None
         adjacent_squares = self.selected_field_1.get_adjacent(board)
         self.selected_field_1.activate_drought(self.piece)
         for adjacent_square in adjacent_squares:
@@ -1328,17 +1394,18 @@ class DroughtPower(Power):
 
 
 class EndPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "End"
         self.set_target_types(["piece", "field"])
         self.confirm_message = "Move this piece back to their temple area?"
         self.highlight_types = ["highlight all targets", "highlight all targets"]
 
-    def use_power(self, board):
+    def use_power(self, board: Board) -> None:
+        assert self.selected_piece_1 is not None and self.selected_field_1 is not None
         self.selected_piece_1.move(self.selected_field_1, board)
 
-    def get_target_fields_1(self, pieces, board):
+    def get_target_fields_1(self, pieces: Pieces, board: Board) -> list[Field]:
         target_fields = []
         for piece in pieces.pieces:
             if not piece.immune("End") and not piece.location.in_temple_area():
@@ -1350,8 +1417,9 @@ class EndPower(Power):
 
         return target_fields
 
-    def get_target_fields_2(self, board):
+    def get_target_fields_2(self, board: Board) -> list[Field]:
         target_fields = []
+        assert self.selected_piece_1 is not None
         temple_area = board.get_temple_area(self.selected_piece_1.player)
         for field in temple_area:
             if field.check_legal_movement(self.selected_piece_1, using_power=True):
@@ -1361,21 +1429,24 @@ class EndPower(Power):
 
 
 class NightPower(Power):
-    def __init__(self, piece):
+    def __init__(self, piece: Piece) -> None:
         super().__init__(piece)
         self.name = "Night"
         self.set_target_types(["barrier"])
         self.confirm_message = "Consume this barrier?"
         self.highlight_types = ["highlight all targets"]
 
-    def use_power(self, board, barriers):
+    def use_power(self, board: Board, barriers: Barriers) -> None:
+        assert self.selected_barrier_1 is not None
+        assert self.selected_barrier_1.location is not None
         target_location = board.get_field(
             self.selected_barrier_1.location.x, self.selected_barrier_1.location.y
         )
+        assert target_location is not None
         self.selected_barrier_1.remove_from_board(board, barriers)
         self.piece.move(target_location, board)
 
-    def get_target_fields_1(self, board):
+    def get_target_fields_1(self, board: Board) -> list[Field]:
         target_fields = []
 
         adjacent_fields = self.piece.location.get_adjacent(board, type="all")

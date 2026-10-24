@@ -1,8 +1,17 @@
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 
 import pygame
 
 from daeqhipao.style import BACKGROUND_BOARD, CONDITION_SIZE, HIGHLIGHT_BOARD
+
+if TYPE_CHECKING:
+    from daeqhipao.barriers import Barrier
+    from daeqhipao.board import Board
+    from daeqhipao.pieces import Piece
+    from daeqhipao.players import Player
 
 CONDITION_IMAGE_DIR = os.path.join(os.path.dirname(__file__), "images", "conditions")
 OCEAN_IMAGE = pygame.image.load(os.path.join(CONDITION_IMAGE_DIR, "ocean.svg"))
@@ -26,44 +35,45 @@ class Field:
 
     """
 
-    def __init__(self, x, y):
+    def __init__(self, x: int, y: int) -> None:
         self.x = x
         self.y = y
-        self.owner = None
+        self.owner: Player | None = None
         self.type = "field"
 
-        self.piece = None
-        self.barrier = None
+        self.piece: Piece | None = None
+        self.barrier: Barrier | None = None
         self.occupied = False
 
         self.ocean = False
         self.drought = False
         self.flame = False
-        self.flame_casters = set()
-        self.flame_counts = {}
-        self.ocean_casters = set()
-        self.drought_casters = set()
+        self.flame_casters: set[Piece] = set()
+        self.flame_counts: dict[Player, int] = {}
+        self.ocean_casters: set[Piece] = set()
+        self.drought_casters: set[Piece] = set()
         self.mind = False
 
         self.type = "Regular"
-        self.rectangle = None
-        self.ocean_rectangle = None
-        self.drought_rectangle = None
-        self.flame_rectangle = None
+        # Set by Board.set_rectangles for every square on the board
+        self.rectangle: pygame.Rect
+        self.ocean_rectangle: pygame.Rect
+        self.drought_rectangle: pygame.Rect
+        self.flame_rectangle: pygame.Rect
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.x}-{self.y}"
 
-    def __eq__(self, field):
-        if type(self) == type(field):
+    def __eq__(self, field: object) -> bool:
+        if isinstance(field, Field):
             return self.x == field.x and self.y == field.y
         else:
             return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.x, self.y))
 
-    def draw_conditions(self, screen):
+    def draw_conditions(self, screen: pygame.Surface) -> None:
         if self.ocean:
             ocean_image_scaled = pygame.transform.smoothscale(
                 OCEAN_IMAGE, (CONDITION_SIZE, CONDITION_SIZE)
@@ -80,38 +90,38 @@ class Field:
             )
             screen.blit(flame_image_scaled, self.flame_rectangle)
 
-    def activate_ocean(self, piece):
+    def activate_ocean(self, piece: Piece) -> None:
         self.ocean = True
         self.ocean_casters.add(piece)
         piece.ocean_fields.add(self)
 
-    def deactivate_ocean(self, piece):
+    def deactivate_ocean(self, piece: Piece) -> None:
         self.ocean_casters.remove(piece)
         if not self.ocean_casters:
             self.ocean = False
 
-    def activate_drought(self, piece):
+    def activate_drought(self, piece: Piece) -> None:
         self.drought = True
         self.drought_casters.add(piece)
         piece.drought_fields.add(self)
 
-    def deactivate_drought(self, piece):
+    def deactivate_drought(self, piece: Piece) -> None:
         self.drought_casters.remove(piece)
         if not self.drought_casters:
             self.drought = False
 
-    def redraw(self, screen, colour):
+    def redraw(self, screen: pygame.Surface, colour: tuple[int, int, int]) -> None:
         pygame.draw.rect(screen, colour, self.rectangle)
 
-    def place_barrier(self, barrier):
+    def place_barrier(self, barrier: Barrier) -> None:
         self.occupied = True
         self.barrier = barrier
 
-    def remove_barrier(self, barrier):
+    def remove_barrier(self, barrier: Barrier) -> None:
         self.occupied = False
         self.barrier = None
 
-    def set_rectangle(self, square_width):
+    def set_rectangle(self, square_width: int) -> None:
         x = (self.x + 1) * square_width
         y = (self.y + 1) * square_width
         self.rectangle = pygame.Rect(x, y, square_width, square_width)
@@ -126,13 +136,20 @@ class Field:
         )
         self.flame_rectangle = pygame.Rect(x, y, CONDITION_SIZE, CONDITION_SIZE)
 
-    def draw(self, screen, hovered, highlight_colour=HIGHLIGHT_BOARD):
+    def draw(
+        self,
+        screen: pygame.Surface,
+        hovered: bool,
+        highlight_colour: tuple[int, int, int] = HIGHLIGHT_BOARD,
+    ) -> None:
         if hovered:
             pygame.draw.rect(screen, highlight_colour, self.rectangle)
         else:
             pygame.draw.rect(screen, BACKGROUND_BOARD, self.rectangle)
 
-    def highlight_colour(self, screen, board, colour):
+    def highlight_colour(
+        self, screen: pygame.Surface, board: Board, colour: tuple[int, int, int]
+    ) -> None:
         pygame.draw.rect(screen, colour, self.rectangle)
         self.draw_conditions(screen)
         if self.piece:
@@ -141,7 +158,7 @@ class Field:
             board.draw_barrier(self.barrier)
         board.draw_frame()
 
-    def highlight(self, screen, player, board):
+    def highlight(self, screen: pygame.Surface, player: Player, board: Board) -> None:
         pygame.draw.rect(screen, player.colour_rgb, self.rectangle)
         self.draw_conditions(screen)
         if self.piece:
@@ -149,7 +166,9 @@ class Field:
         elif self.barrier:
             board.draw_barrier(self.barrier)
 
-    def highlight_strong(self, screen, player, board):
+    def highlight_strong(
+        self, screen: pygame.Surface, player: Player, board: Board
+    ) -> None:
         pygame.draw.rect(screen, player.colour_rgb_strong, self.rectangle)
         self.draw_conditions(screen)
         if self.piece:
@@ -157,17 +176,17 @@ class Field:
         elif self.barrier:
             board.draw_barrier(self.barrier)
 
-    def set_ownership(self, player):
+    def set_ownership(self, player: Player) -> None:
         self.owner = player
 
-    def in_temple_area(self):
+    def in_temple_area(self) -> bool:
         return self.type == "temple area" or self.type == "starting square"
 
-    def activate_flame(self, piece):
+    def activate_flame(self, piece: Piece) -> None:
         self.flame = True
         self.flame_counts[piece.player] = 3
 
-    def countdown_flame(self, player):
+    def countdown_flame(self, player: Player) -> None:
         try:
             self.flame_counts[player] -= 1
             if self.flame_counts[player] == 0:
@@ -175,24 +194,24 @@ class Field:
         except KeyError:
             pass
 
-    def deactivate_flame(self, player):
+    def deactivate_flame(self, player: Player) -> None:
         del self.flame_counts[player]
         if not self.flame_counts:
             self.flame = False
 
-    def check_occupied(self):
+    def check_occupied(self) -> None:
         if self.piece or self.barrier:
             self.occupied = True
         else:
             self.occupied = False
 
-    def check_adjacent(self, field, board):
+    def check_adjacent(self, field: Field, board: Board) -> bool:
         diff_x = abs(self.x - field.x)
         diff_y = abs(self.y - field.y)
 
-        return not (diff_x > 1 or diff_y > 1 or diff_x == 0 and diff_y == 0)
+        return not (diff_x > 1 or diff_y > 1 or (diff_x == 0 and diff_y == 0))
 
-    def get_adjacent(self, board, type="all"):
+    def get_adjacent(self, board: Board, type: str = "all") -> list[Field]:
 
         adjacent = []
         if type == "horizontal":
@@ -236,19 +255,16 @@ class Field:
 
         return adjacent
 
-    def check_legal_movement(self, piece, using_power=False):
+    def check_legal_movement(self, piece: Piece, using_power: bool = False) -> bool:
         return not (
             self.type == "no field"
             or self.occupied
-            or self.type == "temple square"
-            and self.owner == piece.player
+            or (self.type == "temple square" and self.owner == piece.player)
             or not self.permitted_area_condition(piece)
-            or self.mind
-            and using_power
-            and not piece.immune("Mind")
+            or (self.mind and using_power and not piece.immune("Mind"))
         )
 
-    def check_flame(self, piece):
+    def check_flame(self, piece: Piece) -> bool:
         if self.flame:
             if piece.player in self.flame_counts and len(self.flame_counts) == 1:
                 return False
@@ -257,14 +273,14 @@ class Field:
         else:
             return False
 
-    def permitted_area_condition(self, piece):
+    def permitted_area_condition(self, piece: Piece) -> bool:
         if self.ocean and piece.gender == "female" and not piece.immune("Ocean"):
             return False
         if self.drought and piece.gender == "male" and not piece.immune("Drought"):
             return False
         return not self.check_flame(piece)
 
-    def get_legal_adjacent(self, board, piece):
+    def get_legal_adjacent(self, board: Board, piece: Piece) -> list[Field]:
 
         adjacent = []
 

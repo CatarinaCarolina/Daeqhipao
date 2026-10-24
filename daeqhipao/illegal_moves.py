@@ -3,13 +3,13 @@ class Immune(Exception):
 
 
 class PlayerError(Exception):
-    def __init__(self, reason):
+    def __init__(self, reason: str) -> None:
         if reason == "illegal number":
             self.message = "Player ID must be 1, 2, 3 or 4!"
 
 
 class IllegalField(Exception):
-    def __init__(self, reason):
+    def __init__(self, reason: str) -> None:
         if reason == "no field":
             self.message = "You selected a field that does not exist!"
         elif reason == "occupied":
@@ -19,7 +19,7 @@ class IllegalField(Exception):
 
 
 class IllegalPiece(Exception):
-    def __init__(self, reason):
+    def __init__(self, reason: str) -> None:
         if reason == "no god":
             self.message = "This is not a god piece! Please select a god."
         elif reason == "heirs":
@@ -31,7 +31,7 @@ class IllegalPiece(Exception):
 
 
 class IllegalMove(Exception):
-    def __init__(self, reason):
+    def __init__(self, reason: str) -> None:
         if reason == "board":
             self.message = "This field does not exist!"
         elif reason == "range":
@@ -57,7 +57,7 @@ class IllegalMove(Exception):
 
 
 class IllegalPower(Exception):
-    def __init__(self, reason):
+    def __init__(self, reason: str) -> None:
         if reason == "impression":
             self.message = "Cannot switch places with a piece in a temple area!"
         elif reason == "death":
@@ -89,7 +89,7 @@ class IllegalPower(Exception):
 
 
 class IllegalBarrier(Exception):
-    def __init__(self, reason):
+    def __init__(self, reason: str) -> None:
         if reason == "occupied":
             self.message = "This square is already occupied."
         if reason == "count":

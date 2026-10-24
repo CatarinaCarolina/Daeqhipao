@@ -28,7 +28,7 @@ RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 
 
-def main():
+def main() -> None:
     pygame.init()
     screen = pygame.display.set_mode(size)
     screen.fill(WHITE)
@@ -110,6 +110,7 @@ def main():
             board.highlight_field(mouse)
         else:
             if turn_manager.hover:
+                assert turn_manager.power is not None
                 turn_manager.power.highlight_hover(
                     screen, board, turn_manager.current_target_fields, mouse
                 )

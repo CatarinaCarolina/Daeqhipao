@@ -2,7 +2,10 @@
 Gaming board
 """
 
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 
 import pygame
 
@@ -20,6 +23,9 @@ from daeqhipao.style import (
     SYMBOL_SIZE,
 )
 
+if TYPE_CHECKING:
+    from daeqhipao.players import Player
+
 IMAGE_DIR = os.path.join(os.path.dirname(__file__), "images")
 PIECE_IMAGE_DIR = os.path.join(IMAGE_DIR, "pieces")
 LOGO = os.path.join(IMAGE_DIR, "logo.png")
@@ -27,12 +33,12 @@ BARRIER_LOGO = os.path.join(IMAGE_DIR, "barrier.png")
 
 
 class Board:
-    def __init__(self, screen):
+    def __init__(self, screen: pygame.Surface) -> None:
 
         self.screen = screen
         self.logo = pygame.image.load(LOGO)
 
-        self.board = []
+        self.board: list[list[Field]] = []
         for i in range(11):
             row = []
             for j in range(11):
@@ -42,9 +48,9 @@ class Board:
         self.assign_field_types()
         self.set_all_fields()
         self.set_rectangles()
-        self.temple_squares = {}
+        self.temple_squares: dict[Player, Field] = {}
 
-    def draw_frame(self):
+    def draw_frame(self) -> None:
         self.draw_board_line((5, 0), (6, 0))
         self.draw_board_line((3, 1), (8, 1))
         self.draw_board_line((3, 2), (8, 2))
@@ -76,7 +82,7 @@ class Board:
         logo = pygame.transform.smoothscale(self.logo, (SQUARE_WIDTH, SQUARE_WIDTH))
         self.screen.blit(logo, logo_position)
 
-    def draw_board_line(self, start, end):
+    def draw_board_line(self, start: tuple[int, int], end: tuple[int, int]) -> None:
         start_x, start_y = start
         end_x, end_y = end
 
@@ -88,7 +94,7 @@ class Board:
 
         pygame.draw.line(self.screen, BLACK, (start_x, start_y), (end_x, end_y))
 
-    def get_mouse_field(self, mouse):
+    def get_mouse_field(self, mouse: tuple[int, int]) -> Field | None:
         x = int(mouse[0] / SQUARE_WIDTH) - 1
         y = int(mouse[1] / SQUARE_WIDTH) - 1
 
@@ -100,7 +106,7 @@ class Board:
         else:
             return None
 
-    def get_temple_area(self, player):
+    def get_temple_area(self, player: Player) -> list[Field]:
         temple_fields = []
         for field in self.fields:
             if field.in_temple_area() and field.owner == player:
@@ -108,24 +114,25 @@ class Board:
 
         return temple_fields
 
-    def draw_barrier(self, barrier):
+    def draw_barrier(self, barrier: Barrier) -> None:
         barrier_image = pygame.image.load(BARRIER_LOGO)
         barrier_image_scaled = pygame.transform.smoothscale(
             barrier_image, (BARRIER_SIZE, BARRIER_SIZE)
         )
 
+        assert barrier.rectangle is not None
         self.screen.blit(barrier_image_scaled, barrier.rectangle)
 
         self.draw_frame()
 
-    def highlight_move_options(self, piece):
+    def highlight_move_options(self, piece: Piece) -> None:
         legal_fields = piece.get_movement_options(self)
         for legal_field in legal_fields:
             legal_field.highlight(self.screen, piece.player, self)
 
         self.draw_frame()
 
-    def redraw_field(self, field, colour):
+    def redraw_field(self, field: Field, colour: tuple[int, int, int]) -> None:
         field.redraw(self.screen, colour)
         field.draw_conditions(self.screen)
         if field.piece:
@@ -136,32 +143,32 @@ class Board:
 
         self.draw_frame()
 
-    def highlight_fields(self, player, fields):
+    def highlight_fields(self, player: Player, fields: list[Field]) -> None:
 
         for field in fields:
             field.highlight(self.screen, player, self)
 
         self.draw_frame()
 
-    def highlight_fields_strong(self, player, fields):
+    def highlight_fields_strong(self, player: Player, fields: list[Field]) -> None:
         for field in fields:
             field.highlight_strong(self.screen, player, self)
 
         self.draw_frame()
 
-    def highlight_field_strong(self, player, field):
+    def highlight_field_strong(self, player: Player, field: Field) -> None:
         field.highlight_strong(self.screen, player, self)
         self.draw_frame()
 
-    def set_all_fields(self):
-        self.fields = []
+    def set_all_fields(self) -> None:
+        self.fields: list[Field] = []
         for i, row in enumerate(self.board):
             for j, _column in enumerate(row):
                 field = self.get_field(i, j)
                 if field:
                     self.fields.append(field)
 
-    def highlight_field(self, mouse):
+    def highlight_field(self, mouse: tuple[int, int]) -> None:
         for field in self.fields:
             if field.rectangle.collidepoint(mouse):
                 hovered = True
@@ -175,19 +182,19 @@ class Board:
             elif field.barrier:
                 self.draw_barrier(field.barrier)
 
-    def calc_piece_offset(self, field):
+    def calc_piece_offset(self, field: Field) -> tuple[int, int]:
         x_offset = (1 + field.x) * SQUARE_WIDTH + PIECE_PADDING
         y_offset = (1 + field.y) * SQUARE_WIDTH + PIECE_PADDING
 
         return x_offset, y_offset
 
-    def calc_symbol_offset(self, field):
+    def calc_symbol_offset(self, field: Field) -> tuple[int, int]:
         x_offset = (1 + field.x) * SQUARE_WIDTH + SYMBOL_PADDING
         y_offset = (1 + field.y) * SQUARE_WIDTH + SYMBOL_PADDING
 
         return x_offset, y_offset
 
-    def draw_piece(self, piece):
+    def draw_piece(self, piece: Piece) -> None:
 
         piece_type = piece.type.lower()
 
@@ -215,17 +222,17 @@ class Board:
 
         self.screen.blit(symbol_image_scaled, piece.symbol_rectangle)
 
-    def draw_pieces(self):
+    def draw_pieces(self) -> None:
         for row in self.board:
             for field in row:
                 if field.piece:
                     self.draw_piece(field.piece)
 
-    def draw_board(self):
+    def draw_board(self) -> None:
         self.draw_frame()
         self.draw_pieces()
 
-    def assign_field_types(self):
+    def assign_field_types(self) -> None:
 
         for i, row in enumerate(self.board):
             for j, _column in enumerate(row):
@@ -252,11 +259,11 @@ class Board:
         for x, y in BOARD_PROPERTIES.temple_squares:
             self.board[x][y].type = "temple square"
 
-    def set_rectangles(self):
+    def set_rectangles(self) -> None:
         for field in self.fields:
             field.set_rectangle(SQUARE_WIDTH)
 
-    def print_board_type(self):
+    def print_board_type(self) -> None:
         string = ""
         for row in self.board:
             for column in row:
@@ -264,7 +271,7 @@ class Board:
             string += "\n"
         print(string)
 
-    def get_field(self, x, y):
+    def get_field(self, x: int, y: int) -> Field | None:
         # Negative indices would wrap around to the opposite edge of the board
         if x < 0 or y < 0:
             return None
@@ -277,7 +284,10 @@ class Board:
         except IndexError:
             return None
 
-    def swap_objects(self, object_1, object_2):
+    def swap_objects(
+        self, object_1: Piece | Barrier, object_2: Piece | Barrier
+    ) -> None:
+        assert object_1.location is not None and object_2.location is not None
         source_x = object_1.location.x
         source_y = object_1.location.y
 
@@ -286,6 +296,7 @@ class Board:
 
         source_location = self.get_field(source_x, source_y)
         target_location = self.get_field(target_x, target_y)
+        assert source_location is not None and target_location is not None
 
         x_diff_1 = target_location.x - object_1.location.x
         y_diff_1 = target_location.y - object_1.location.y
@@ -293,31 +304,31 @@ class Board:
         x_diff_2 = -x_diff_1
         y_diff_2 = -y_diff_1
 
-        if type(object_1) == Barrier:
+        if isinstance(object_1, Barrier):
             source_location.barrier = None
 
-        elif issubclass(type(object_1), Piece):
+        elif isinstance(object_1, Piece):
             source_location.piece = None
 
-        if type(object_2) == Barrier:
+        if isinstance(object_2, Barrier):
             target_location.barrier = None
 
-        elif issubclass(type(object_2), Piece):
+        elif isinstance(object_2, Piece):
             target_location.piece = None
 
-        if type(object_1) == Barrier:
+        if isinstance(object_1, Barrier):
             target_location.barrier = object_1
 
-        elif issubclass(type(object_1), Piece):
+        elif isinstance(object_1, Piece):
             target_location.piece = object_1
 
-        if type(object_2) == Barrier:
+        if isinstance(object_2, Barrier):
             source_location.barrier = object_2
 
-        elif issubclass(type(object_2), Piece):
+        elif isinstance(object_2, Piece):
             source_location.piece = object_2
 
-        if issubclass(type(object_1), Piece):
+        if isinstance(object_1, Piece):
             object_1.piece_rectangle = object_1.piece_rectangle.move(
                 x_diff_1 * SQUARE_WIDTH, y_diff_1 * SQUARE_WIDTH
             )
@@ -325,13 +336,14 @@ class Board:
                 x_diff_1 * SQUARE_WIDTH, y_diff_1 * SQUARE_WIDTH
             )
             self.draw_piece(object_1)
-        elif type(object_1) == Barrier:
+        elif isinstance(object_1, Barrier):
+            assert object_1.rectangle is not None
             object_1.rectangle = object_1.rectangle.move(
                 x_diff_1 * SQUARE_WIDTH, y_diff_1 * SQUARE_WIDTH
             )
             self.draw_barrier(object_1)
 
-        if issubclass(type(object_2), Piece):
+        if isinstance(object_2, Piece):
             object_2.piece_rectangle = object_2.piece_rectangle.move(
                 x_diff_2 * SQUARE_WIDTH, y_diff_2 * SQUARE_WIDTH
             )
@@ -339,7 +351,8 @@ class Board:
                 x_diff_2 * SQUARE_WIDTH, y_diff_2 * SQUARE_WIDTH
             )
             self.draw_piece(object_2)
-        elif type(object_2) == Barrier:
+        elif isinstance(object_2, Barrier):
+            assert object_2.rectangle is not None
             object_2.rectangle = object_2.rectangle.move(
                 x_diff_2 * SQUARE_WIDTH, y_diff_2 * SQUARE_WIDTH
             )

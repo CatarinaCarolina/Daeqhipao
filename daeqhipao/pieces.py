@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 import os
+from typing import TYPE_CHECKING
 
 import pygame
 
@@ -46,19 +49,25 @@ from daeqhipao.style import (
     SYMBOL_SIZE,
 )
 
+if TYPE_CHECKING:
+    from daeqhipao.board import Board
+    from daeqhipao.fields import Field
+    from daeqhipao.players import Player
+    from daeqhipao.powers import Power
+
 SYMBOL_DIR = os.path.join(os.path.dirname(__file__), "images", "symbols")
 
 
 class Pieces:
-    def __init__(self, pieces):
+    def __init__(self, pieces: list[Piece]) -> None:
         self.pieces = pieces
-        self.active_pieces = []
-        self.passive_pieces = []
+        self.active_pieces: list[Piece] = []
+        self.passive_pieces: list[Piece] = []
         self.set_active_and_passive_pieces()
         self.set_domains()
         self.set_god_groups()
 
-    def set_active_and_passive_pieces(self):
+    def set_active_and_passive_pieces(self) -> None:
         self.active_pieces = []
         self.passive_pieces = []
         for piece in self.pieces:
@@ -67,14 +76,14 @@ class Pieces:
             else:
                 self.passive_pieces.append(piece)
 
-    def check_zaopeng(self, player):
+    def check_zaopeng(self, player: Player) -> bool:
         for piece in self.pieces:
             if piece.player == player and piece.active:
                 return False
 
         return True
 
-    def zaopeng(self, player):
+    def zaopeng(self, player: Player) -> None:
         for piece in self.pieces:
             if piece.player == player and not piece.active:
                 if not piece.oblivion:
@@ -83,7 +92,7 @@ class Pieces:
                     piece.countdown_oblivion()
         self.set_active_and_passive_pieces()
 
-    def get_pieces_player(self, player):
+    def get_pieces_player(self, player: Player) -> list[Piece]:
         player_pieces = []
         for piece in self.pieces:
             if piece.player == player:
@@ -91,17 +100,17 @@ class Pieces:
 
         return player_pieces
 
-    def set_domains(self):
-        self.spiritual_pieces = []
-        self.physical_pieces = []
+    def set_domains(self) -> None:
+        self.spiritual_pieces: list[Piece] = []
+        self.physical_pieces: list[Piece] = []
         for piece in self.pieces:
             if piece.domain == "spiritual":
                 self.spiritual_pieces.append(piece)
             elif piece.domain == "physical":
                 self.physical_pieces.append(piece)
 
-    def set_god_groups(self):
-        self.god_groups = {
+    def set_god_groups(self) -> None:
+        self.god_groups: dict[str, list[Piece]] = {
             "builder": [],
             "mover": [],
             "alchemist": [],
@@ -117,13 +126,20 @@ class Pieces:
 
 
 class Piece:
-    def __init__(self, piece_id, player):
+    # Set by every concrete piece class
+    name: str
+    type: str
+    symbol: str
+    powers: list[Power]
+    power: Power
+
+    def __init__(self, piece_id: int, player: Player) -> None:
         self.id = piece_id
-        self.location = None
-        self.name = None
-        self.gender = None
-        self.domain = None
-        self.god_group = None
+        # Set by set_location when the piece is placed on the board
+        self.location: Field
+        self.gender: str | None = None
+        self.domain: str | None = None
+        self.god_group: str | None = None
 
         self.active = True
         self.player = player
@@ -135,11 +151,11 @@ class Piece:
         self.legacy_frequency = False
         self.legacy_duration = False
 
-        self.potency = False
-        self.frequency = False
+        self.potency: int = False
+        self.frequency: int = False
 
         self.union = False
-        self.union_partners = set()
+        self.union_partners: set[Piece] = set()
         self.communication = 0
         self.communication_active = 0
 
@@ -147,37 +163,37 @@ class Piece:
         self.oblivion = 0
         self.liberation = 0
 
-        self.ocean_fields = set()
-        self.drought_fields = set()
-        self.flame_fields = set()
+        self.ocean_fields: set[Field] = set()
+        self.drought_fields: set[Field] = set()
+        self.flame_fields: set[Field] = set()
 
-        self.symbol_image = None
-
-        self.piece_rectangle = None
-        self.symbol_rectangle = None
+        # Set by load_symbol_image and set_location
+        self.symbol_image: pygame.Surface
+        self.piece_rectangle: pygame.Rect
+        self.symbol_rectangle: pygame.Rect
         self.selection_nr = 0
         self.perception = 0
 
         self.movement_type = "all"
 
-    def __eq__(self, piece):
-        if type(self) == type(piece):
+    def __eq__(self, piece: object) -> bool:
+        if isinstance(piece, Piece) and type(self) == type(piece):
             return self.id == piece.id
         else:
             return False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return self.id
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.name
 
-    def get_movement_options(self, board):
+    def get_movement_options(self, board: Board) -> list[Field]:
         legal_fields = self.location.get_legal_adjacent(board, self)
 
         return legal_fields
 
-    def is_last_active_piece(self, pieces):
+    def is_last_active_piece(self, pieces: Pieces) -> bool:
         if self.active:
             active_count = 0
             for piece in pieces.get_pieces_player(self.player):
@@ -188,29 +204,29 @@ class Piece:
         else:
             return False
 
-    def countdown_frequency(self):
+    def countdown_frequency(self) -> None:
         if self.frequency > 0:
             self.frequency -= 1
 
-    def countdown_potency(self):
+    def countdown_potency(self) -> None:
         if self.potency > 0:
             self.potency -= 1
 
-    def set_piece_rectangle(self):
+    def set_piece_rectangle(self) -> None:
         x = (1 + self.location.x) * SQUARE_WIDTH + PIECE_PADDING
         y = (1 + self.location.y) * SQUARE_WIDTH + PIECE_PADDING
         self.piece_rectangle = pygame.Rect(x, y, PIECE_SIZE, PIECE_SIZE)
 
-    def set_symbol_rectangle(self):
+    def set_symbol_rectangle(self) -> None:
         x = (1 + self.location.x) * SQUARE_WIDTH + SYMBOL_PADDING
         y = (1 + self.location.y) * SQUARE_WIDTH + SYMBOL_PADDING
         self.symbol_rectangle = pygame.Rect(x, y, SYMBOL_SIZE, SYMBOL_SIZE)
 
-    def load_symbol_image(self):
+    def load_symbol_image(self) -> None:
         symbol = os.path.join(SYMBOL_DIR, f"{self.name}.png")
         self.symbol_image = pygame.image.load(symbol)
 
-    def set_location(self, location, board):
+    def set_location(self, location: tuple[int, int], board: Board) -> None:
         x, y = location
 
         field = board.get_field(x, y)
@@ -223,7 +239,7 @@ class Piece:
         self.set_piece_rectangle()
         self.set_symbol_rectangle()
 
-    def choose_legacy_effect(self, choice, power):
+    def choose_legacy_effect(self, choice: str, power: str) -> None:
         assert self.legacy
         assert choice in ["duration", "frequency"]
 
@@ -281,19 +297,19 @@ class Piece:
                 raise IllegalPower("frequency")
             self.legacy_frequency = True
 
-    def set_potency(self, user):
+    def set_potency(self, user: Piece) -> None:
         if self.player == user.player:
             self.potency = 2
         else:
             self.potency = 1
 
-    def set_frequency(self, user):
+    def set_frequency(self, user: Piece) -> None:
         if self.player == user.player:
             self.frequency = 2
         else:
             self.frequency = 1
 
-    def activate_perception(self, user, potency=0):
+    def activate_perception(self, user: Piece, potency: int = 0) -> None:
         if not potency:
             if self.player == user.player:
                 self.perception = 3
@@ -305,11 +321,11 @@ class Piece:
             else:
                 self.perception = 4
 
-    def countdown_perception(self):
+    def countdown_perception(self) -> None:
         if self.perception:
             self.perception -= 1
 
-    def sleep(self, pieces):
+    def sleep(self, pieces: Pieces) -> None:
         if not self.legacy_frequency:
             self.active = False
             pieces.active_pieces.remove(self)
@@ -317,7 +333,7 @@ class Piece:
             if self.union:
                 self.trigger_union(pieces, "sleep")
 
-    def wake(self, pieces):
+    def wake(self, pieces: Pieces) -> None:
         self.active = True
         for field in self.drought_fields:
             field.deactivate_drought(self)
@@ -331,14 +347,14 @@ class Piece:
         if self.union:
             self.trigger_union(pieces, "wake")
 
-    def activate_union(self, piece):
+    def activate_union(self, piece: Piece) -> None:
         self.union = True
         self.union_partners.add(piece)
         for piece_2 in piece.union_partners:
             if piece_2 != self:
                 self.union_partners.add(piece_2)
 
-    def trigger_union(self, pieces, wake_or_sleep):
+    def trigger_union(self, pieces: Pieces, wake_or_sleep: str) -> None:
 
         self.union = False
         for union_partner in self.union_partners:
@@ -350,12 +366,12 @@ class Piece:
                 union_partner.sleep(pieces)
         self.union_partners = set()
 
-    def deactivate_legacy(self, choice):
+    def deactivate_legacy(self, choice: str) -> None:
         self.legacy_duration = False
         self.legacy_frequency = False
         self.legacy = False
 
-    def activate_communication(self, user, potency=0):
+    def activate_communication(self, user: Piece, potency: int = 0) -> None:
 
         if self.player == user.player:
             self.communication_active = 2
@@ -367,61 +383,61 @@ class Piece:
         else:
             self.communication = 4
 
-    def countdown_communication(self):
+    def countdown_communication(self) -> None:
         if self.communication > 1:
             self.communication -= 1
 
-    def reset_communication(self):
+    def reset_communication(self) -> None:
         if self.communication_active > 0:
             self.communication_active -= 1
 
-    def activate_illusion(self):
+    def activate_illusion(self) -> None:
         self.illusion = True
         self.player.illusion = True
 
-    def deactivate_illusion(self):
+    def deactivate_illusion(self) -> None:
         self.illusion = False
         self.player.illusion = False
 
-    def activate_idea(self):
+    def activate_idea(self) -> None:
         self.idea = True
         self.player.idea = True
 
-    def deactivate_idea(self):
+    def deactivate_idea(self) -> None:
         self.idea = False
         self.player.idea = False
 
-    def set_blindness(self, user):
+    def set_blindness(self, user: Piece) -> None:
         if user.legacy_duration:
             self.blindness = 4
         else:
             self.blindness = 2
 
-    def countdown_blindness(self):
+    def countdown_blindness(self) -> None:
         if self.blindness > 0:
             self.blindness -= 1
 
-    def set_oblivion(self, user):
+    def set_oblivion(self, user: Piece) -> None:
         if user.legacy_duration:
             self.oblivion = 2
         else:
             self.oblivion = 1
 
-    def countdown_oblivion(self):
+    def countdown_oblivion(self) -> None:
         self.oblivion -= 1
         assert self.oblivion >= 0
 
-    def set_liberation(self, user):
+    def set_liberation(self, user: Piece) -> None:
         if user.legacy_duration:
             self.liberation = 3
         else:
             self.liberation = 2
 
-    def countdown_liberation(self):
+    def countdown_liberation(self) -> None:
         if self.liberation > 0:
             self.liberation -= 1
 
-    def immune(self, power):
+    def immune(self, power: str) -> bool:
         if self.perception:
             return True
 
@@ -429,8 +445,9 @@ class Piece:
             return power in [p.name for p in self.powers]
         elif self.type == "Heir":
             return power == self.name
+        return False
 
-    def move(self, target_location, board):
+    def move(self, target_location: Field, board: Board) -> None:
         original_x = self.location.x
         original_y = self.location.y
 
@@ -451,18 +468,19 @@ class Piece:
             x_diff * SQUARE_WIDTH, y_diff * SQUARE_WIDTH
         )
         origin_square = board.get_field(original_x, original_y)
+        assert origin_square is not None
 
         board.redraw_field(origin_square, BACKGROUND_BOARD)
         board.draw_piece(self)
 
-    def select_piece(self, piece, power):
+    def select_piece(self, piece: Piece, power: str) -> None:
 
         if piece.immune(power):
             raise Immune(f"{piece} is immune to the power {power}.")
 
 
 class God(Piece):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         Piece.__init__(self, nr, player)
         self.type = "God"
         self.movement_type = "all"
@@ -472,7 +490,7 @@ class God(Piece):
 
 
 class Builder(God):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         God.__init__(self, nr, player)
         self.gender = "female"
         self.name = "Builder"
@@ -488,7 +506,7 @@ class Builder(God):
 
 
 class Alchemist(God):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         God.__init__(self, nr, player)
         self.gender = "female"
         self.name = "Alchemist"
@@ -504,7 +522,7 @@ class Alchemist(God):
 
 
 class Connector(God):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         God.__init__(self, nr, player)
         self.gender = "female"
         self.name = "Connector"
@@ -520,7 +538,7 @@ class Connector(God):
 
 
 class Wiper(God):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         God.__init__(self, nr, player)
         self.gender = "female"
         self.name = "Wiper"
@@ -536,7 +554,7 @@ class Wiper(God):
 
 
 class Mover(God):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         God.__init__(self, nr, player)
         self.gender = "male"
         self.name = "Mover"
@@ -552,7 +570,7 @@ class Mover(God):
 
 
 class Consumer(God):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         God.__init__(self, nr, player)
         self.gender = "male"
         self.name = "Consumer"
@@ -568,7 +586,7 @@ class Consumer(God):
 
 
 class Gifter(God):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         God.__init__(self, nr, player)
         self.gender = "male"
         self.name = "Gifter"
@@ -584,7 +602,7 @@ class Gifter(God):
 
 
 class Director(God):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         God.__init__(self, nr, player)
         self.gender = "male"
         self.name = "Director"
@@ -603,7 +621,7 @@ class Director(God):
 
 
 class FemaleHeir(Piece):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         Piece.__init__(self, nr, player)
         self.gender = "female"
         self.type = "Heir"
@@ -611,7 +629,7 @@ class FemaleHeir(Piece):
 
 
 class MaleHeir(Piece):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         Piece.__init__(self, nr, player)
         self.gender = "male"
         self.type = "Heir"
@@ -622,7 +640,7 @@ class MaleHeir(Piece):
 
 
 class Union(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Union"
         self.symbol = "m"
@@ -633,7 +651,7 @@ class Union(FemaleHeir):
 
 
 class Impression(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Impression"
         self.symbol = "n"
@@ -644,7 +662,7 @@ class Impression(FemaleHeir):
 
 
 class Communication(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Communication"
         self.symbol = "o"
@@ -656,7 +674,7 @@ class Communication(FemaleHeir):
 
 
 class Familiarity(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Familiarity"
         self.symbol = "p"
@@ -667,7 +685,7 @@ class Familiarity(FemaleHeir):
 
 
 class Death(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Death"
         self.symbol = "u"
@@ -678,7 +696,7 @@ class Death(FemaleHeir):
 
 
 class Blindness(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Blindness"
         self.symbol = "v"
@@ -689,7 +707,7 @@ class Blindness(FemaleHeir):
 
 
 class Oblivion(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Oblivion"
         self.symbol = "w"
@@ -701,7 +719,7 @@ class Oblivion(FemaleHeir):
 
 
 class Liberation(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Liberation"
         self.symbol = "x"
@@ -713,7 +731,7 @@ class Liberation(FemaleHeir):
 
 
 class Earth(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Earth"
         self.symbol = "y"
@@ -725,7 +743,7 @@ class Earth(FemaleHeir):
 
 
 class Ocean(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Ocean"
         self.symbol = "z"
@@ -736,7 +754,7 @@ class Ocean(FemaleHeir):
 
 
 class Sky(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Sky"
         self.symbol = "A"
@@ -747,7 +765,7 @@ class Sky(FemaleHeir):
 
 
 class Sun(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Sun"
         self.symbol = "B"
@@ -758,7 +776,7 @@ class Sun(FemaleHeir):
 
 
 class Metalmaker(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Metalmaker"
         self.symbol = "G"
@@ -769,7 +787,7 @@ class Metalmaker(FemaleHeir):
 
 
 class Bloodmaker(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Bloodmaker"
         self.symbol = "H"
@@ -780,7 +798,7 @@ class Bloodmaker(FemaleHeir):
 
 
 class Fog(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Fog"
         self.symbol = "I"
@@ -791,7 +809,7 @@ class Fog(FemaleHeir):
 
 
 class Flame(FemaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         FemaleHeir.__init__(self, nr, player)
         self.name = "Flame"
         self.symbol = "J"
@@ -805,7 +823,7 @@ class Flame(FemaleHeir):
 
 
 class Life(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Life"
         self.symbol = "i"
@@ -816,7 +834,7 @@ class Life(MaleHeir):
 
 
 class Perception(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Perception"
         self.symbol = "j"
@@ -827,7 +845,7 @@ class Perception(MaleHeir):
 
 
 class Mind(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Mind"
         self.symbol = "k"
@@ -838,7 +856,7 @@ class Mind(MaleHeir):
 
 
 class Legacy(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Legacy"
         self.symbol = "l"
@@ -849,7 +867,7 @@ class Legacy(MaleHeir):
 
 
 class Time(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Time"
         self.symbol = "q"
@@ -860,7 +878,7 @@ class Time(MaleHeir):
 
 
 class Illusion(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Illusion"
         self.symbol = "r"
@@ -871,7 +889,7 @@ class Illusion(MaleHeir):
 
 
 class Idea(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Idea"
         self.symbol = "s"
@@ -882,7 +900,7 @@ class Idea(MaleHeir):
 
 
 class Metamorphosis(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Metamorphosis"
         self.symbol = "t"
@@ -893,7 +911,7 @@ class Metamorphosis(MaleHeir):
 
 
 class Quake(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Quake"
         self.symbol = "C"
@@ -904,7 +922,7 @@ class Quake(MaleHeir):
 
 
 class Wave(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Wave"
         self.symbol = "D"
@@ -915,7 +933,7 @@ class Wave(MaleHeir):
 
 
 class Wind(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Wind"
         self.symbol = "E"
@@ -926,7 +944,7 @@ class Wind(MaleHeir):
 
 
 class Shadow(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Shadow"
         self.symbol = "F"
@@ -937,7 +955,7 @@ class Shadow(MaleHeir):
 
 
 class Void(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Void"
         self.symbol = "K"
@@ -948,7 +966,7 @@ class Void(MaleHeir):
 
 
 class Drought(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Drought"
         self.symbol = "L"
@@ -959,7 +977,7 @@ class Drought(MaleHeir):
 
 
 class End(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "End"
         self.symbol = "M"
@@ -970,7 +988,7 @@ class End(MaleHeir):
 
 
 class Night(MaleHeir):
-    def __init__(self, nr, player):
+    def __init__(self, nr: int, player: Player) -> None:
         MaleHeir.__init__(self, nr, player)
         self.name = "Night"
         self.symbol = "N"
