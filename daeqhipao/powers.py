@@ -764,6 +764,11 @@ class EarthPower(Power):
         self.start_with_choice = True
         self.highlight_types = ["hover", "hover"]
 
+    def check_power_usable(self, pieces, barriers, board, players):
+        if not barriers.unused_barriers:
+            return False
+        return super().check_power_usable(pieces, barriers, board, players)
+
     def get_target_fields_1(self, board):
         target_fields = []
 
