@@ -6,7 +6,6 @@ import pygame
 from daeqhipao.illegal_moves import *
 from daeqhipao.style import *
 from daeqhipao.powers import *
-import copy
 
 SYMBOL_DIR = os.path.join(os.path.dirname(__file__), 'images', 'symbols')
 
@@ -215,12 +214,6 @@ class Piece:
             if not power in frequency:
                 raise IllegalPower('frequency')
             self.legacy_frequency = True
-
-    def clear_location(self, board):
-        board.get_field(self.location).piece = None
-        board.get_field(self.location).check_occupied()
-
-        self.location = None
 
     def set_potency(self, user):
         if self.player == user.player:
@@ -549,12 +542,6 @@ class Communication(FemaleHeir):
         self.domain = 'spiritual'
         self.god_group = 'connector'
 
-    def use_power(self, piece):
-        self.select_piece(piece, self.name)
-
-        self.activate_communication()
-
-        self.sleep()
 
 class Familiarity(FemaleHeir):
     def __init__(self, nr, player):
@@ -565,9 +552,6 @@ class Familiarity(FemaleHeir):
         self.power = FamiliarityPower(self)
         self.domain = 'spiritual'
         self.god_group = 'connector'
-
-    def use_power(self, piece, pieces):
-        raise NotImplementedError
 
 
 class Death(FemaleHeir):
@@ -580,15 +564,6 @@ class Death(FemaleHeir):
         self.domain = 'spiritual'
         self.god_group = 'wiper'
 
-    def use_power(self, piece):
-        self.select_piece(piece, self.name)
-
-        if not piece.active:
-            raise IllegalPower('death')
-
-        piece.sleep()
-        self.sleep()
-
 
 class Blindness(FemaleHeir):
     def __init__(self, nr, player):
@@ -599,12 +574,6 @@ class Blindness(FemaleHeir):
         self.power = BlindnessPower(self)
         self.domain = 'spiritual'
         self.god_group = 'wiper'
-
-    def use_power(self, piece):
-        self.select_piece(piece, self.name)
-
-        piece.set_blindness(self)
-        self.sleep()
 
 
 class Oblivion(FemaleHeir):
@@ -618,15 +587,6 @@ class Oblivion(FemaleHeir):
         self.domain = 'spiritual'
         self.god_group = 'wiper'
 
-    def use_power(self, piece):
-        self.select_piece(piece, self.name)
-
-        if not piece.passive:
-            raise IllegalPower('oblivion')
-
-        piece.set_oblivion(self)
-        self.sleep()
-
 
 class Liberation(FemaleHeir):
     def __init__(self, nr, player):
@@ -638,12 +598,6 @@ class Liberation(FemaleHeir):
         self.power = LiberationPower(self)
         self.domain = 'spiritual'
         self.god_group = 'wiper'
-
-    def use_power(self, piece):
-        self.select_piece(piece, self.name)
-
-        piece.set_liberation(self)
-        self.sleep()
 
 
 class Earth(FemaleHeir):
@@ -780,14 +734,6 @@ class Legacy(MaleHeir):
         self.domain = 'spiritual'
         self.god_group = 'gifter'
 
-    def use_power(self, piece):
-        self.select_piece(piece, self.name)
-        if piece.legacy:
-            raise IllegalPower('legacy')
-
-        piece.legacy = True
-        self.sleep()
-
 
 class Time(MaleHeir):
     def __init__(self, nr, player):
@@ -831,31 +777,6 @@ class Metamorphosis(MaleHeir):
         self.power = MetamorphosisPower(self)
         self.domain = 'spiritual'
         self.god_group = 'director'
-
-    def use_power(self, piece_1, piece_2, board, players):
-        if piece_1.player == self.player:
-            raise IllegalPower('metamorphosis')
-
-        if piece_2.player == self.player:
-            raise IllegalPower('metamorphosis')
-
-        if piece_1.type == 'God':
-            raise IllegalPower('god')
-
-        if piece_2.type == 'God':
-            raise IllegalPower('god')
-
-        player_1 = copy.copy(piece_1.player)
-        player_2 = copy.copy(piece_2.player)
-
-        piece1_location = copy.copy(piece_1.location)
-        piece2_location = copy.copy(piece_2.location)
-
-        board.get_field(piece1_location).piece = piece_2
-        board.get_field(piece2_location).piece = piece_1
-
-        piece_1.location = board.get_field(piece2_location)
-        piece_2.location = board.get_field(piece1_location)
 
 
 class Quake(MaleHeir):

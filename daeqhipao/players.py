@@ -65,53 +65,12 @@ class Player:
         else:
             self.time_pieces = 2
 
-    def add_piece_idea(self, piece):
-        self.idea.append(piece)
-
-    def remove_piece_idea(self, piece):
-        assert self.illusion[0] == piece
-        self.idea.remove(piece)
-
-    def add_piece_illusion(self, piece):
-        self.illusion.append(piece)
-
-    def remove_illusion_idea(self, piece):
-        assert self.illusion[0] == piece
-        self.illusion.remove(piece)
-
     def set_time_count(self):
         self.time += 1
-
-    def deactivate_time(self):
-        self.time -= 0
-        self.time_pieces = 0
-        assert self.time >= 0
 
     def get_all_pieces(self):
         all_pieces = self.heirs + [self.god]
         return all_pieces
-
-    def set_god(self, piece_name):
-        piece_id = (self.id - 1) * 5 + 1
-        piece = self.piece_dict[piece_name](piece_id, self)
-        if not piece.type == 'God':
-            raise IllegalPiece('no god')
-
-        self.god = piece
-
-    def set_heir(self, piece_name):
-
-        heir_nr = len(self.heirs) + 1
-        if heir_nr > 4:
-            raise IllegalPiece('heirs')
-
-        heir_id = (self.id - 1) * 5 + 1 + heir_nr
-        piece = self.piece_dict[piece_name](heir_id, self)
-
-        if not piece.type == 'Heir':
-            raise IllegalPiece('no heir')
-
-        self.heirs.append(piece)
 
     def set_field_ownership(self, board):
         x, y = self.temple
@@ -123,30 +82,3 @@ class Player:
 
         for x, y in self.temple_area:
             board.board[x][y].set_ownership(self)
-
-
-    def assign_location(self, piece, location, board):
-        if not 1 <= location <= 5:
-            raise IllegalField('no starter')
-        
-        if not location in self.free_positions:
-            raise IllegalField('occupied')
-
-        field = board.get_starting_positions(self)[location]
-        
-        piece.set_location(field, board)
-
-        self.free_positions.remove(location)
-
-    def clear_all_locations(self, board):
-        for piece in self.get_all_pieces():
-            piece.clear_location(board)
-        
-    def clear_location(self, piece, board):
-        if not piece in self.get_all_pieces():
-            raise IllegalPiece('not yours')
-        piece.clear_location(board)
-        
-        
-
-    
