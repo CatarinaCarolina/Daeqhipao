@@ -7,7 +7,8 @@ from daeqhipao.illegal_moves import *
 from daeqhipao.style import *
 from daeqhipao.powers import *
 
-SYMBOL_DIR = os.path.join(os.path.dirname(__file__), 'images', 'symbols')
+SYMBOL_DIR = os.path.join(os.path.dirname(__file__), "images", "symbols")
+
 
 class Pieces:
     def __init__(self, pieces):
@@ -57,20 +58,22 @@ class Pieces:
         self.spiritual_pieces = []
         self.physical_pieces = []
         for piece in self.pieces:
-            if piece.domain == 'spiritual':
+            if piece.domain == "spiritual":
                 self.spiritual_pieces.append(piece)
-            elif piece.domain == 'physical':
+            elif piece.domain == "physical":
                 self.physical_pieces.append(piece)
 
     def set_god_groups(self):
-        self.god_groups = {'builder': [],
-                           'mover': [],
-                           'alchemist': [],
-                           'consumer': [],
-                           'gifter': [],
-                           'connector': [],
-                           'director': [],
-                           'wiper': []}
+        self.god_groups = {
+            "builder": [],
+            "mover": [],
+            "alchemist": [],
+            "consumer": [],
+            "gifter": [],
+            "connector": [],
+            "director": [],
+            "wiper": [],
+        }
         for piece in self.pieces:
             if piece.god_group:
                 self.god_groups[piece.god_group].append(piece)
@@ -84,7 +87,7 @@ class Piece:
         self.gender = None
         self.domain = None
         self.god_group = None
-        
+
         self.active = True
         self.player = player
 
@@ -97,7 +100,7 @@ class Piece:
 
         self.potency = False
         self.frequency = False
-        
+
         self.union = False
         self.union_partners = set()
         self.communication = 0
@@ -118,8 +121,7 @@ class Piece:
         self.selection_nr = 0
         self.perception = 0
 
-        self.movement_type = 'all'
-
+        self.movement_type = "all"
 
     def __eq__(self, piece):
         if type(self) == type(piece):
@@ -174,7 +176,7 @@ class Piece:
         self.symbol_rectangle = pygame.Rect(x, y, SYMBOL_SIZE, SYMBOL_SIZE)
 
     def load_symbol_image(self):
-        symbol = os.path.join(SYMBOL_DIR, f'{self.name}.png')
+        symbol = os.path.join(SYMBOL_DIR, f"{self.name}.png")
         self.symbol_image = pygame.image.load(symbol)
 
     def set_location(self, location, board):
@@ -183,7 +185,6 @@ class Piece:
         field = board.get_field(x, y)
 
         if field:
-        
             self.location = field
             field.piece = self
             field.check_occupied()
@@ -193,26 +194,60 @@ class Piece:
 
     def choose_legacy_effect(self, choice, power):
         assert self.legacy
-        assert choice in ['duration', 'frequency']
+        assert choice in ["duration", "frequency"]
 
-        duration = {'Time', 'Mind', 'Perception', 'Union', 'Communication',
-                    'Oblivion', 'Liberation', 'Blindness', 'Ocean', 'Flame',
-                    'Drought', 'Void'}
-        frequency = {'Illusion', 'Idea', 'Time', 'Life', 'Death', 'Wave',
-                     'Perception', 'Union', 'Impression', 'Communication',
-                     'Metamorphosis', 'Oblivion', 'Liberation', 'Blindness',
-                     'Earth', 'Ocean', 'Sun', 'Sky', 'Quake', 'Wind', 'Shadow',
-                     'Bloodmaker', 'Metalmaker', 'Fog', 'Drought', 'Void',
-                     'End', 'Night'}
-        
+        duration = {
+            "Time",
+            "Mind",
+            "Perception",
+            "Union",
+            "Communication",
+            "Oblivion",
+            "Liberation",
+            "Blindness",
+            "Ocean",
+            "Flame",
+            "Drought",
+            "Void",
+        }
+        frequency = {
+            "Illusion",
+            "Idea",
+            "Time",
+            "Life",
+            "Death",
+            "Wave",
+            "Perception",
+            "Union",
+            "Impression",
+            "Communication",
+            "Metamorphosis",
+            "Oblivion",
+            "Liberation",
+            "Blindness",
+            "Earth",
+            "Ocean",
+            "Sun",
+            "Sky",
+            "Quake",
+            "Wind",
+            "Shadow",
+            "Bloodmaker",
+            "Metalmaker",
+            "Fog",
+            "Drought",
+            "Void",
+            "End",
+            "Night",
+        }
 
-        if choice == 'duration':
+        if choice == "duration":
             if not power in duration:
-                raise IllegalPower('duration')
+                raise IllegalPower("duration")
             self.legacy_duration = True
-        elif choice == 'frequency':
+        elif choice == "frequency":
             if not power in frequency:
-                raise IllegalPower('frequency')
+                raise IllegalPower("frequency")
             self.legacy_frequency = True
 
     def set_potency(self, user):
@@ -249,7 +284,7 @@ class Piece:
             pieces.active_pieces.remove(self)
             pieces.passive_pieces.append(self)
             if self.union:
-                self.trigger_union(pieces, 'sleep')
+                self.trigger_union(pieces, "sleep")
 
     def wake(self, pieces):
         self.active = True
@@ -263,7 +298,7 @@ class Piece:
         pieces.passive_pieces.remove(self)
 
         if self.union:
-            self.trigger_union(pieces, 'wake')
+            self.trigger_union(pieces, "wake")
 
     def activate_union(self, piece):
         self.union = True
@@ -278,9 +313,9 @@ class Piece:
         for union_partner in self.union_partners:
             union_partner.union = False
             union_partner.union_partners = set()
-            if wake_or_sleep == 'wake':
+            if wake_or_sleep == "wake":
                 union_partner.wake(pieces)
-            elif wake_or_sleep == 'sleep':
+            elif wake_or_sleep == "sleep":
                 union_partner.sleep(pieces)
         self.union_partners = set()
 
@@ -288,8 +323,6 @@ class Piece:
         self.legacy_duration = False
         self.legacy_frequency = False
         self.legacy = False
-
-
 
     def activate_communication(self, user, potency=0):
 
@@ -314,7 +347,7 @@ class Piece:
     def activate_illusion(self):
         self.illusion = True
         self.player.illusion = True
-        
+
     def deactivate_illusion(self):
         self.illusion = False
         self.player.illusion = False
@@ -322,7 +355,7 @@ class Piece:
     def activate_idea(self):
         self.idea = True
         self.player.idea = True
-        
+
     def deactivate_idea(self):
         self.idea = False
         self.player.idea = False
@@ -332,7 +365,7 @@ class Piece:
             self.blindness = 4
         else:
             self.blindness = 2
-        
+
     def countdown_blindness(self):
         if self.blindness > 0:
             self.blindness -= 1
@@ -342,6 +375,7 @@ class Piece:
             self.oblivion = 2
         else:
             self.oblivion = 1
+
     def countdown_oblivion(self):
         self.oblivion -= 1
         assert self.oblivion >= 0
@@ -351,7 +385,7 @@ class Piece:
             self.liberation = 3
         else:
             self.liberation = 2
-            
+
     def countdown_liberation(self):
         if self.liberation > 0:
             self.liberation -= 1
@@ -359,13 +393,13 @@ class Piece:
     def immune(self, power):
         if self.perception:
             return True
-        
-        elif self.type == 'God':
+
+        elif self.type == "God":
             if power in [p.name for p in self.powers]:
                 return True
             else:
                 return False
-        elif self.type == 'Heir':
+        elif self.type == "Heir":
             if power == self.name:
                 return True
             else:
@@ -375,26 +409,28 @@ class Piece:
         original_x = self.location.x
         original_y = self.location.y
 
-
         x_diff = target_location.x - self.location.x
         y_diff = target_location.y - self.location.y
 
         self.location.piece = None
         self.location.check_occupied()
-        
+
         self.location = target_location
         self.location.piece = self
         self.location.check_occupied()
 
-        self.piece_rectangle = self.piece_rectangle.move(x_diff * SQUARE_WIDTH, y_diff * SQUARE_WIDTH)
-        self.symbol_rectangle = self.symbol_rectangle.move(x_diff * SQUARE_WIDTH, y_diff * SQUARE_WIDTH)
+        self.piece_rectangle = self.piece_rectangle.move(
+            x_diff * SQUARE_WIDTH, y_diff * SQUARE_WIDTH
+        )
+        self.symbol_rectangle = self.symbol_rectangle.move(
+            x_diff * SQUARE_WIDTH, y_diff * SQUARE_WIDTH
+        )
         origin_square = board.get_field(original_x, original_y)
 
         board.redraw_field(origin_square, BACKGROUND_BOARD)
         board.draw_piece(self)
 
     def select_piece(self, piece, power):
-
 
         if piece.immune(power):
             raise Immune("%s is immune to the power %s." % (piece, power))
@@ -403,465 +439,517 @@ class Piece:
 class God(Piece):
     def __init__(self, nr, player):
         Piece.__init__(self, nr, player)
-        self.type = 'God'
-        self.movement_type = 'all'
+        self.type = "God"
+        self.movement_type = "all"
 
-        
-#==============================================================================
+
+# ==============================================================================
+
 
 class Builder(God):
     def __init__(self, nr, player):
         God.__init__(self, nr, player)
-        self.gender = 'female'
+        self.gender = "female"
         self.name = "Builder"
-        self.powers = [EarthPower(self), OceanPower(self), SkyPower(self), SunPower(self)]
-        self.symbol = 'e'
+        self.powers = [
+            EarthPower(self),
+            OceanPower(self),
+            SkyPower(self),
+            SunPower(self),
+        ]
+        self.symbol = "e"
         self.load_symbol_image()
-        self.domain = 'physical'
+        self.domain = "physical"
+
 
 class Alchemist(God):
     def __init__(self, nr, player):
         God.__init__(self, nr, player)
-        self.gender = 'female'
+        self.gender = "female"
         self.name = "Alchemist"
-        self.powers = [MetalmakerPower(self), BloodmakerPower(self), FogPower(self), FlamePower(self)]
-        self.symbol = 'g'
+        self.powers = [
+            MetalmakerPower(self),
+            BloodmakerPower(self),
+            FogPower(self),
+            FlamePower(self),
+        ]
+        self.symbol = "g"
         self.load_symbol_image()
-        self.domain = 'physical'
+        self.domain = "physical"
+
 
 class Connector(God):
     def __init__(self, nr, player):
         God.__init__(self, nr, player)
-        self.gender = 'female'
+        self.gender = "female"
         self.name = "Connector"
-        self.powers = [UnionPower(self), ImpressionPower(self), CommunicationPower(self), FamiliarityPower(self)]
-        self.symbol = 'b'
+        self.powers = [
+            UnionPower(self),
+            ImpressionPower(self),
+            CommunicationPower(self),
+            FamiliarityPower(self),
+        ]
+        self.symbol = "b"
         self.load_symbol_image()
-        self.domain = 'spiritual'
+        self.domain = "spiritual"
 
-        
+
 class Wiper(God):
     def __init__(self, nr, player):
         God.__init__(self, nr, player)
-        self.gender = 'female'
-        self.name = 'Wiper'
-        self.powers = [DeathPower(self), BlindnessPower(self), OblivionPower(self), LiberationPower(self)]
-        self.symbol = 'd'
+        self.gender = "female"
+        self.name = "Wiper"
+        self.powers = [
+            DeathPower(self),
+            BlindnessPower(self),
+            OblivionPower(self),
+            LiberationPower(self),
+        ]
+        self.symbol = "d"
         self.load_symbol_image()
-        self.domain = 'spiritual'
+        self.domain = "spiritual"
+
 
 class Mover(God):
     def __init__(self, nr, player):
         God.__init__(self, nr, player)
-        self.gender = 'male'
-        self.name = 'Mover'
-        self.powers = [QuakePower(self), WavePower(self), WindPower(self), ShadowPower(self)]
-        self.symbol = 'f'
+        self.gender = "male"
+        self.name = "Mover"
+        self.powers = [
+            QuakePower(self),
+            WavePower(self),
+            WindPower(self),
+            ShadowPower(self),
+        ]
+        self.symbol = "f"
         self.load_symbol_image()
-        self.domain = 'physical'
+        self.domain = "physical"
+
 
 class Consumer(God):
     def __init__(self, nr, player):
         God.__init__(self, nr, player)
-        self.gender = 'male'
-        self.name = 'Consumer'
-        self.powers = [VoidPower(self), DroughtPower(self), EndPower(self), NightPower(self)]
-        self.symbol = 'h'
+        self.gender = "male"
+        self.name = "Consumer"
+        self.powers = [
+            VoidPower(self),
+            DroughtPower(self),
+            EndPower(self),
+            NightPower(self),
+        ]
+        self.symbol = "h"
         self.load_symbol_image()
-        self.domain = 'physical'
+        self.domain = "physical"
+
 
 class Gifter(God):
     def __init__(self, nr, player):
         God.__init__(self, nr, player)
-        self.gender = 'male'
-        self.name = 'Gifter'
-        self.powers = [LifePower(self), PerceptionPower(self), MindPower(self), LegacyPower(self)]
-        self.symbol = 'a'
+        self.gender = "male"
+        self.name = "Gifter"
+        self.powers = [
+            LifePower(self),
+            PerceptionPower(self),
+            MindPower(self),
+            LegacyPower(self),
+        ]
+        self.symbol = "a"
         self.load_symbol_image()
-        self.domain = 'spiritual'
+        self.domain = "spiritual"
+
 
 class Director(God):
     def __init__(self, nr, player):
         God.__init__(self, nr, player)
-        self.gender = 'male'
-        self.name = 'Director'
-        self.powers = [TimePower(self), IllusionPower(self), IdeaPower(self), MetamorphosisPower(self)]
-        self.symbol = 'c'
+        self.gender = "male"
+        self.name = "Director"
+        self.powers = [
+            TimePower(self),
+            IllusionPower(self),
+            IdeaPower(self),
+            MetamorphosisPower(self),
+        ]
+        self.symbol = "c"
         self.load_symbol_image()
-        self.domain = 'spiritual'
+        self.domain = "spiritual"
 
-#==============================================================================
+
+# ==============================================================================
+
 
 class FemaleHeir(Piece):
     def __init__(self, nr, player):
         Piece.__init__(self, nr, player)
-        self.gender = 'female'
-        self.type = 'Heir'
-        self.movement_type = 'horizontal'
+        self.gender = "female"
+        self.type = "Heir"
+        self.movement_type = "horizontal"
+
 
 class MaleHeir(Piece):
     def __init__(self, nr, player):
         Piece.__init__(self, nr, player)
-        self.gender = 'male'
-        self.type = 'Heir'
-        self.movement_type = 'diagonal'
+        self.gender = "male"
+        self.type = "Heir"
+        self.movement_type = "diagonal"
 
 
-#==============================================================================
+# ==============================================================================
+
 
 class Union(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Union"
-        self.symbol = 'm'
+        self.symbol = "m"
         self.load_symbol_image()
         self.power = UnionPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'connector'
+        self.domain = "spiritual"
+        self.god_group = "connector"
 
 
 class Impression(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Impression"
-        self.symbol = 'n'
+        self.symbol = "n"
         self.load_symbol_image()
         self.power = ImpressionPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'connector'
+        self.domain = "spiritual"
+        self.god_group = "connector"
 
 
 class Communication(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Communication"
-        self.symbol = 'o'
+        self.symbol = "o"
         self.load_symbol_image()
-        self.selections = ['piece']
+        self.selections = ["piece"]
         self.power = CommunicationPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'connector'
+        self.domain = "spiritual"
+        self.god_group = "connector"
 
 
 class Familiarity(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Familiarity"
-        self.symbol = 'p'
+        self.symbol = "p"
         self.load_symbol_image()
         self.power = FamiliarityPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'connector'
+        self.domain = "spiritual"
+        self.god_group = "connector"
 
 
 class Death(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Death"
-        self.symbol = 'u'
+        self.symbol = "u"
         self.load_symbol_image()
         self.power = DeathPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'wiper'
+        self.domain = "spiritual"
+        self.god_group = "wiper"
 
 
 class Blindness(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Blindness"
-        self.symbol = 'v'
+        self.symbol = "v"
         self.load_symbol_image()
         self.power = BlindnessPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'wiper'
+        self.domain = "spiritual"
+        self.god_group = "wiper"
 
 
 class Oblivion(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Oblivion"
-        self.symbol = 'w'
+        self.symbol = "w"
         self.load_symbol_image()
-        self.selections = ['piece']
+        self.selections = ["piece"]
         self.power = OblivionPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'wiper'
+        self.domain = "spiritual"
+        self.god_group = "wiper"
 
 
 class Liberation(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Liberation"
-        self.symbol = 'x'
+        self.symbol = "x"
         self.load_symbol_image()
-        self.selections = ['piece']
+        self.selections = ["piece"]
         self.power = LiberationPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'wiper'
+        self.domain = "spiritual"
+        self.god_group = "wiper"
 
 
 class Earth(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Earth"
-        self.symbol = 'y'
+        self.symbol = "y"
         self.load_symbol_image()
-        self.selections = ['field']
+        self.selections = ["field"]
         self.power = EarthPower(self)
-        self.domain = 'physical'
-        self.god_group = 'builder'
+        self.domain = "physical"
+        self.god_group = "builder"
 
 
 class Ocean(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Ocean"
-        self.symbol = 'z'
+        self.symbol = "z"
         self.load_symbol_image()
         self.power = OceanPower(self)
-        self.domain = 'physical'
-        self.god_group = 'builder'
+        self.domain = "physical"
+        self.god_group = "builder"
 
 
 class Sky(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Sky"
-        self.symbol = 'A'
+        self.symbol = "A"
         self.load_symbol_image()
         self.power = SkyPower(self)
-        self.domain = 'physical'
-        self.god_group = 'builder'
+        self.domain = "physical"
+        self.god_group = "builder"
 
 
 class Sun(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Sun"
-        self.symbol = 'B'
+        self.symbol = "B"
         self.load_symbol_image()
         self.power = SunPower(self)
-        self.domain = 'physical'
-        self.god_group = 'builder'
-            
+        self.domain = "physical"
+        self.god_group = "builder"
+
 
 class Metalmaker(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Metalmaker"
-        self.symbol = 'G'
+        self.symbol = "G"
         self.load_symbol_image()
         self.power = MetalmakerPower(self)
-        self.domain = 'physical'
-        self.god_group = 'alchemist'
+        self.domain = "physical"
+        self.god_group = "alchemist"
 
 
 class Bloodmaker(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Bloodmaker"
-        self.symbol = 'H'
+        self.symbol = "H"
         self.load_symbol_image()
         self.power = BloodmakerPower(self)
-        self.domain = 'physical'
-        self.god_group = 'alchemist'
+        self.domain = "physical"
+        self.god_group = "alchemist"
 
 
 class Fog(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Fog"
-        self.symbol = 'I'
+        self.symbol = "I"
         self.load_symbol_image()
         self.power = FogPower(self)
-        self.domain = 'physical'
-        self.god_group = 'alchemist'
+        self.domain = "physical"
+        self.god_group = "alchemist"
 
 
 class Flame(FemaleHeir):
     def __init__(self, nr, player):
         FemaleHeir.__init__(self, nr, player)
         self.name = "Flame"
-        self.symbol = 'J'
+        self.symbol = "J"
         self.load_symbol_image()
         self.power = FlamePower(self)
-        self.domain = 'physical'
-        self.god_group = 'alchemist'
+        self.domain = "physical"
+        self.god_group = "alchemist"
 
 
-#==============================================================================
+# ==============================================================================
+
 
 class Life(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Life"
-        self.symbol = 'i'
+        self.symbol = "i"
         self.load_symbol_image()
         self.power = LifePower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'gifter'
+        self.domain = "spiritual"
+        self.god_group = "gifter"
 
 
 class Perception(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Perception"
-        self.symbol = 'j'
+        self.symbol = "j"
         self.load_symbol_image()
         self.power = PerceptionPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'gifter'
+        self.domain = "spiritual"
+        self.god_group = "gifter"
 
 
 class Mind(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Mind"
-        self.symbol = 'k'
+        self.symbol = "k"
         self.load_symbol_image()
         self.power = MindPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'gifter'
+        self.domain = "spiritual"
+        self.god_group = "gifter"
 
 
 class Legacy(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Legacy"
-        self.symbol = 'l'
+        self.symbol = "l"
         self.load_symbol_image()
         self.power = LegacyPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'gifter'
+        self.domain = "spiritual"
+        self.god_group = "gifter"
 
 
 class Time(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Time"
-        self.symbol = 'q'
+        self.symbol = "q"
         self.load_symbol_image()
         self.power = TimePower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'director'
+        self.domain = "spiritual"
+        self.god_group = "director"
 
 
 class Illusion(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Illusion"
-        self.symbol = 'r'
+        self.symbol = "r"
         self.load_symbol_image()
         self.power = IllusionPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'director'
+        self.domain = "spiritual"
+        self.god_group = "director"
 
 
 class Idea(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Idea"
-        self.symbol = 's'
+        self.symbol = "s"
         self.load_symbol_image()
         self.power = IdeaPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'director'
+        self.domain = "spiritual"
+        self.god_group = "director"
 
 
 class Metamorphosis(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Metamorphosis"
-        self.symbol = 't'
+        self.symbol = "t"
         self.load_symbol_image()
         self.power = MetamorphosisPower(self)
-        self.domain = 'spiritual'
-        self.god_group = 'director'
+        self.domain = "spiritual"
+        self.god_group = "director"
 
 
 class Quake(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Quake"
-        self.symbol = 'C'
+        self.symbol = "C"
         self.load_symbol_image()
         self.power = QuakePower(self)
-        self.domain = 'physical'
-        self.god_group = 'mover'
+        self.domain = "physical"
+        self.god_group = "mover"
 
 
 class Wave(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Wave"
-        self.symbol = 'D'
+        self.symbol = "D"
         self.load_symbol_image()
         self.power = WavePower(self)
-        self.domain = 'physical'
-        self.god_group = 'mover'
+        self.domain = "physical"
+        self.god_group = "mover"
 
 
 class Wind(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Wind"
-        self.symbol = 'E'
+        self.symbol = "E"
         self.load_symbol_image()
         self.power = WindPower(self)
-        self.domain = 'physical'
-        self.god_group = 'mover'
+        self.domain = "physical"
+        self.god_group = "mover"
 
 
 class Shadow(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Shadow"
-        self.symbol = 'F'
+        self.symbol = "F"
         self.load_symbol_image()
         self.power = ShadowPower(self)
-        self.domain = 'physical'
-        self.god_group = 'mover'
+        self.domain = "physical"
+        self.god_group = "mover"
 
 
 class Void(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Void"
-        self.symbol = 'K'
+        self.symbol = "K"
         self.load_symbol_image()
         self.power = VoidPower(self)
-        self.domain = 'physical'
-        self.god_group = 'consumer'
+        self.domain = "physical"
+        self.god_group = "consumer"
 
 
 class Drought(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Drought"
-        self.symbol = 'L'
+        self.symbol = "L"
         self.load_symbol_image()
         self.power = DroughtPower(self)
-        self.domain = 'physical'
-        self.god_group = 'consumer'
+        self.domain = "physical"
+        self.god_group = "consumer"
 
 
 class End(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "End"
-        self.symbol = 'M'
+        self.symbol = "M"
         self.load_symbol_image()
         self.power = EndPower(self)
-        self.domain = 'physical'
-        self.god_group = 'consumer'
+        self.domain = "physical"
+        self.god_group = "consumer"
 
 
 class Night(MaleHeir):
     def __init__(self, nr, player):
         MaleHeir.__init__(self, nr, player)
         self.name = "Night"
-        self.symbol = 'N'
+        self.symbol = "N"
         self.load_symbol_image()
         self.power = NightPower(self)
-        self.domain = 'physical'
-        self.god_group = 'consumer'
+        self.domain = "physical"
+        self.god_group = "consumer"

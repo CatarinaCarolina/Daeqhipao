@@ -1,6 +1,7 @@
 import pygame
 from daeqhipao.style import *
 
+
 class Barrier:
     def __init__(self, barrier_id):
         self.id = barrier_id
@@ -9,7 +10,7 @@ class Barrier:
         self.rectangle = None
 
     def __repr__(self):
-        return f'Barrier {self.id}'
+        return f"Barrier {self.id}"
 
     def __eq__(self, barrier):
         if type(self) == type(barrier):
@@ -29,7 +30,7 @@ class Barrier:
         self.rectangle = pygame.Rect(x, y, BARRIER_SIZE, BARRIER_SIZE)
 
     def place_on_board(self, field, board, barriers):
-        if not field.occupied and field.type != 'temple square':
+        if not field.occupied and field.type != "temple square":
             self.on_board = True
             self.location = field
             field.place_barrier(self)
@@ -51,9 +52,12 @@ class Barrier:
 
         board.redraw_field(original_field, BACKGROUND_BOARD)
 
-
     def move(self, field, board):
-        if not field.occupied and field.type != 'temple square' and field.type != 'no field':
+        if (
+            not field.occupied
+            and field.type != "temple square"
+            and field.type != "no field"
+        ):
             original_x = self.location.x
             original_y = self.location.y
 
@@ -65,7 +69,9 @@ class Barrier:
             self.location = field
             field.place_barrier(self)
 
-            self.rectangle = self.rectangle.move(x_diff * SQUARE_WIDTH, y_diff * SQUARE_WIDTH)
+            self.rectangle = self.rectangle.move(
+                x_diff * SQUARE_WIDTH, y_diff * SQUARE_WIDTH
+            )
             board.redraw_field(original_field, BACKGROUND_BOARD)
             board.draw_barrier(self)
 
@@ -87,5 +93,6 @@ class Barriers:
                 self.used_barriers.append(barrier)
             else:
                 self.unused_barriers.append(barrier)
+
 
 BARRIERS = Barriers([Barrier(1), Barrier(2), Barrier(3)])

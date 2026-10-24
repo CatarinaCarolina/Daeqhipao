@@ -3,6 +3,7 @@
 """
 Gaming board
 """
+
 import os
 
 import pygame
@@ -15,14 +16,13 @@ from daeqhipao.barriers import Barrier
 from daeqhipao.pieces import Piece
 
 
-IMAGE_DIR = os.path.join(os.path.dirname(__file__), 'images')
-PIECE_IMAGE_DIR = os.path.join(IMAGE_DIR, 'pieces')
-LOGO = os.path.join(IMAGE_DIR, 'logo.png')
-BARRIER_LOGO = os.path.join(IMAGE_DIR, 'barrier.png')
+IMAGE_DIR = os.path.join(os.path.dirname(__file__), "images")
+PIECE_IMAGE_DIR = os.path.join(IMAGE_DIR, "pieces")
+LOGO = os.path.join(IMAGE_DIR, "logo.png")
+BARRIER_LOGO = os.path.join(IMAGE_DIR, "barrier.png")
 
 
 class Board:
-
     def __init__(self, screen):
 
         self.screen = screen
@@ -39,7 +39,6 @@ class Board:
         self.set_all_fields()
         self.set_rectangles()
         self.temple_squares = {}
-
 
     def draw_frame(self):
         self.draw_board_line((5, 0), (6, 0))
@@ -107,7 +106,9 @@ class Board:
 
     def draw_barrier(self, barrier):
         barrier_image = pygame.image.load(BARRIER_LOGO)
-        barrier_image_scaled = pygame.transform.smoothscale(barrier_image, (BARRIER_SIZE, BARRIER_SIZE))
+        barrier_image_scaled = pygame.transform.smoothscale(
+            barrier_image, (BARRIER_SIZE, BARRIER_SIZE)
+        )
 
         self.screen.blit(barrier_image_scaled, barrier.rectangle)
 
@@ -187,17 +188,26 @@ class Board:
         piece_type = piece.type.lower()
 
         if not piece.active:
-            piece_body_dir = os.path.join(PIECE_IMAGE_DIR, f'{piece.player.colour}_passive.png')
+            piece_body_dir = os.path.join(
+                PIECE_IMAGE_DIR, f"{piece.player.colour}_passive.png"
+            )
         else:
-            piece_body_dir = os.path.join(PIECE_IMAGE_DIR, f'{piece.player.colour}_{piece.gender}_{piece_type}.png')
+            piece_body_dir = os.path.join(
+                PIECE_IMAGE_DIR,
+                f"{piece.player.colour}_{piece.gender}_{piece_type}.png",
+            )
 
         piece_image = pygame.image.load(piece_body_dir)
-        piece_image_scaled = pygame.transform.smoothscale(piece_image, (PIECE_SIZE, PIECE_SIZE))
+        piece_image_scaled = pygame.transform.smoothscale(
+            piece_image, (PIECE_SIZE, PIECE_SIZE)
+        )
 
         self.screen.blit(piece_image_scaled, piece.piece_rectangle)
 
         symbol_image = piece.symbol_image
-        symbol_image_scaled = pygame.transform.smoothscale(symbol_image, (SYMBOL_SIZE, SYMBOL_SIZE))
+        symbol_image_scaled = pygame.transform.smoothscale(
+            symbol_image, (SYMBOL_SIZE, SYMBOL_SIZE)
+        )
 
         self.screen.blit(symbol_image_scaled, piece.symbol_rectangle)
 
@@ -223,13 +233,11 @@ class Board:
                     if i != 5:
                         self.board[i][j].type = "no field"
 
-
                 elif i == 1 or i == 2 or i == 8 or i == 9:
                     if j == 1 or j == 2 or j == 8 or j == 9:
                         self.board[i][j].type = "no field"
                 elif i == 5 and j == 5:
                     self.board[i][j].type = "no field"
-
 
         for x, y in BOARD_PROPERTIES.starting_squares:
             self.board[x][y].type = "starting square"
@@ -245,11 +253,11 @@ class Board:
             field.set_rectangle(SQUARE_WIDTH)
 
     def print_board_type(self):
-        string = ''
+        string = ""
         for row in self.board:
             for column in row:
                 string += "%s\t" % column.type
-            string += '\n'
+            string += "\n"
         print(string)
 
     def get_field(self, x, y):
@@ -258,7 +266,7 @@ class Board:
             return None
         try:
             field = self.board[x][y]
-            if field.type != 'no field':
+            if field.type != "no field":
                 return field
             else:
                 return None
@@ -306,19 +314,31 @@ class Board:
             source_location.piece = object_2
 
         if issubclass(type(object_1), Piece):
-            object_1.piece_rectangle = object_1.piece_rectangle.move(x_diff_1 * SQUARE_WIDTH, y_diff_1 * SQUARE_WIDTH)
-            object_1.symbol_rectangle = object_1.symbol_rectangle.move(x_diff_1 * SQUARE_WIDTH, y_diff_1 * SQUARE_WIDTH)
+            object_1.piece_rectangle = object_1.piece_rectangle.move(
+                x_diff_1 * SQUARE_WIDTH, y_diff_1 * SQUARE_WIDTH
+            )
+            object_1.symbol_rectangle = object_1.symbol_rectangle.move(
+                x_diff_1 * SQUARE_WIDTH, y_diff_1 * SQUARE_WIDTH
+            )
             self.draw_piece(object_1)
         elif type(object_1) == Barrier:
-            object_1.rectangle = object_1.rectangle.move(x_diff_1 * SQUARE_WIDTH, y_diff_1 * SQUARE_WIDTH)
+            object_1.rectangle = object_1.rectangle.move(
+                x_diff_1 * SQUARE_WIDTH, y_diff_1 * SQUARE_WIDTH
+            )
             self.draw_barrier(object_1)
 
         if issubclass(type(object_2), Piece):
-            object_2.piece_rectangle = object_2.piece_rectangle.move(x_diff_2 * SQUARE_WIDTH, y_diff_2 * SQUARE_WIDTH)
-            object_2.symbol_rectangle = object_2.symbol_rectangle.move(x_diff_2 * SQUARE_WIDTH, y_diff_2 * SQUARE_WIDTH)
+            object_2.piece_rectangle = object_2.piece_rectangle.move(
+                x_diff_2 * SQUARE_WIDTH, y_diff_2 * SQUARE_WIDTH
+            )
+            object_2.symbol_rectangle = object_2.symbol_rectangle.move(
+                x_diff_2 * SQUARE_WIDTH, y_diff_2 * SQUARE_WIDTH
+            )
             self.draw_piece(object_2)
         elif type(object_2) == Barrier:
-            object_2.rectangle = object_2.rectangle.move(x_diff_2 * SQUARE_WIDTH, y_diff_2 * SQUARE_WIDTH)
+            object_2.rectangle = object_2.rectangle.move(
+                x_diff_2 * SQUARE_WIDTH, y_diff_2 * SQUARE_WIDTH
+            )
             self.draw_barrier(object_2)
 
         object_1.location = target_location
@@ -326,7 +346,3 @@ class Board:
 
         print(source_location.piece)
         print(target_location.piece)
-
-
-
-

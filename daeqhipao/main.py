@@ -63,15 +63,27 @@ def main():
     piece_10 = Flame(10, player_3)
     piece_10.set_location((7, 1), board)
 
-    #pieces = Pieces([piece_1, piece_2, piece_3, piece_4, piece_5, piece_6, piece_7, piece_8])
+    # pieces = Pieces([piece_1, piece_2, piece_3, piece_4, piece_5, piece_6, piece_7, piece_8])
 
-    pieces = Pieces([piece_1, piece_2, piece_3, piece_4, piece_5, piece_6, piece_7, piece_8, piece_9, piece_10])
+    pieces = Pieces(
+        [
+            piece_1,
+            piece_2,
+            piece_3,
+            piece_4,
+            piece_5,
+            piece_6,
+            piece_7,
+            piece_8,
+            piece_9,
+            piece_10,
+        ]
+    )
     players = [player_1, player_3]
 
     turn_manager = TurnManager(players, board, screen, pieces, BARRIERS)
 
     running = True
-
 
     while running:
         for event in pygame.event.get():
@@ -88,7 +100,9 @@ def main():
             board.highlight_field(mouse)
         else:
             if turn_manager.hover:
-                turn_manager.power.highlight_hover(screen, board, turn_manager.current_target_fields, mouse)
+                turn_manager.power.highlight_hover(
+                    screen, board, turn_manager.current_target_fields, mouse
+                )
 
         highlight_buttons(turn_manager.active_buttons, screen, mouse)
         pygame.display.update()

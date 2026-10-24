@@ -2,10 +2,11 @@ import pygame
 import os
 from daeqhipao.style import *
 
-CONDITION_IMAGE_DIR = os.path.join(os.path.dirname(__file__), 'images', 'conditions')
-OCEAN_IMAGE = pygame.image.load(os.path.join(CONDITION_IMAGE_DIR, 'ocean.svg'))
-DROUGHT_IMAGE = pygame.image.load(os.path.join(CONDITION_IMAGE_DIR, 'drought.svg'))
-FLAME_IMAGE = pygame.image.load(os.path.join(CONDITION_IMAGE_DIR, 'flame.svg'))
+CONDITION_IMAGE_DIR = os.path.join(os.path.dirname(__file__), "images", "conditions")
+OCEAN_IMAGE = pygame.image.load(os.path.join(CONDITION_IMAGE_DIR, "ocean.svg"))
+DROUGHT_IMAGE = pygame.image.load(os.path.join(CONDITION_IMAGE_DIR, "drought.svg"))
+FLAME_IMAGE = pygame.image.load(os.path.join(CONDITION_IMAGE_DIR, "flame.svg"))
+
 
 class Field:
     """
@@ -27,7 +28,7 @@ class Field:
         self.x = x
         self.y = y
         self.owner = None
-        self.type = 'field'
+        self.type = "field"
 
         self.piece = None
         self.barrier = None
@@ -42,7 +43,7 @@ class Field:
         self.drought_casters = set()
         self.mind = False
 
-        self.type = 'Regular'
+        self.type = "Regular"
         self.rectangle = None
         self.ocean_rectangle = None
         self.drought_rectangle = None
@@ -65,13 +66,19 @@ class Field:
 
     def draw_conditions(self, screen):
         if self.ocean:
-            ocean_image_scaled = pygame.transform.smoothscale(OCEAN_IMAGE, (CONDITION_SIZE, CONDITION_SIZE))
+            ocean_image_scaled = pygame.transform.smoothscale(
+                OCEAN_IMAGE, (CONDITION_SIZE, CONDITION_SIZE)
+            )
             screen.blit(ocean_image_scaled, self.ocean_rectangle)
         if self.drought:
-            drought_image_scaled = pygame.transform.smoothscale(DROUGHT_IMAGE, (CONDITION_SIZE, CONDITION_SIZE))
+            drought_image_scaled = pygame.transform.smoothscale(
+                DROUGHT_IMAGE, (CONDITION_SIZE, CONDITION_SIZE)
+            )
             screen.blit(drought_image_scaled, self.drought_rectangle)
         if self.flame:
-            flame_image_scaled = pygame.transform.smoothscale(FLAME_IMAGE, (CONDITION_SIZE, CONDITION_SIZE))
+            flame_image_scaled = pygame.transform.smoothscale(
+                FLAME_IMAGE, (CONDITION_SIZE, CONDITION_SIZE)
+            )
             screen.blit(flame_image_scaled, self.flame_rectangle)
 
     def activate_ocean(self, piece):
@@ -109,8 +116,15 @@ class Field:
         x = (self.x + 1) * square_width
         y = (self.y + 1) * square_width
         self.rectangle = pygame.Rect(x, y, square_width, square_width)
-        self.ocean_rectangle = pygame.Rect(x, y + 4 * CONDITION_SIZE, CONDITION_SIZE, CONDITION_SIZE)
-        self.drought_rectangle = pygame.Rect(x + 4 * CONDITION_SIZE, y + 4 * CONDITION_SIZE, CONDITION_SIZE, CONDITION_SIZE)
+        self.ocean_rectangle = pygame.Rect(
+            x, y + 4 * CONDITION_SIZE, CONDITION_SIZE, CONDITION_SIZE
+        )
+        self.drought_rectangle = pygame.Rect(
+            x + 4 * CONDITION_SIZE,
+            y + 4 * CONDITION_SIZE,
+            CONDITION_SIZE,
+            CONDITION_SIZE,
+        )
         self.flame_rectangle = pygame.Rect(x, y, CONDITION_SIZE, CONDITION_SIZE)
 
     def draw(self, screen, hovered, highlight_colour=HIGHLIGHT_BOARD):
@@ -148,7 +162,7 @@ class Field:
         self.owner = player
 
     def in_temple_area(self):
-        if self.type == 'temple area' or self.type == 'starting square':
+        if self.type == "temple area" or self.type == "starting square":
             return True
         else:
             return False
@@ -165,12 +179,10 @@ class Field:
         except KeyError:
             pass
 
-
     def deactivate_flame(self, player):
         del self.flame_counts[player]
         if not self.flame_counts:
             self.flame = False
-
 
     def check_occupied(self):
         if self.piece or self.barrier:
@@ -191,31 +203,36 @@ class Field:
         else:
             return True
 
-    def get_adjacent(self, board, type='all'):
+    def get_adjacent(self, board, type="all"):
 
         adjacent = []
-        if type == 'horizontal':
+        if type == "horizontal":
+            coord_combinations = [
+                (self.x - 1, self.y),
+                (self.x + 1, self.y),
+                (self.x, self.y - 1),
+                (self.x, self.y + 1),
+            ]
 
-            coord_combinations = [(self.x - 1, self.y),
-                                  (self.x + 1, self.y),
-                                  (self.x, self.y - 1),
-                                  (self.x, self.y + 1)]
+        elif type == "diagonal":
+            coord_combinations = [
+                (self.x - 1, self.y - 1),
+                (self.x + 1, self.y - 1),
+                (self.x - 1, self.y + 1),
+                (self.x + 1, self.y + 1),
+            ]
 
-        elif type == 'diagonal':
-            coord_combinations = [(self.x - 1, self.y - 1),
-                                  (self.x + 1, self.y - 1),
-                                  (self.x - 1, self.y + 1),
-                                  (self.x + 1, self.y + 1)]
-
-        elif type == 'all':
-            coord_combinations = [(self.x - 1, self.y),
-                                  (self.x + 1, self.y),
-                                  (self.x, self.y - 1),
-                                  (self.x, self.y + 1),
-                                  (self.x - 1, self.y - 1),
-                                  (self.x + 1, self.y - 1),
-                                  (self.x - 1, self.y + 1),
-                                  (self.x + 1, self.y + 1)]
+        elif type == "all":
+            coord_combinations = [
+                (self.x - 1, self.y),
+                (self.x + 1, self.y),
+                (self.x, self.y - 1),
+                (self.x, self.y + 1),
+                (self.x - 1, self.y - 1),
+                (self.x + 1, self.y - 1),
+                (self.x - 1, self.y + 1),
+                (self.x + 1, self.y + 1),
+            ]
 
         for coord_combination in coord_combinations:
             x = coord_combination[0]
@@ -231,15 +248,15 @@ class Field:
         return adjacent
 
     def check_legal_movement(self, piece, using_power=False):
-        if self.type == 'no field':
+        if self.type == "no field":
             return False
         elif self.occupied:
             return False
-        elif self.type == 'temple square' and self.owner == piece.player:
+        elif self.type == "temple square" and self.owner == piece.player:
             return False
         elif not self.permitted_area_condition(piece):
             return False
-        elif self.mind and using_power and not piece.immune('Mind'):
+        elif self.mind and using_power and not piece.immune("Mind"):
             return False
 
         return True
@@ -257,9 +274,9 @@ class Field:
             return False
 
     def permitted_area_condition(self, piece):
-        if self.ocean and piece.gender == 'female' and not piece.immune('Ocean'):
+        if self.ocean and piece.gender == "female" and not piece.immune("Ocean"):
             return False
-        if self.drought and piece.gender == 'male' and not piece.immune('Drought'):
+        if self.drought and piece.gender == "male" and not piece.immune("Drought"):
             return False
         if self.check_flame(piece):
             return False

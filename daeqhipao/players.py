@@ -13,13 +13,12 @@ class Players:
 
     def get_player(self, player_id):
         return self.players[player_id]
-        
+
 
 class Player:
-
     def __init__(self, player_id):
         if not type(player_id) == int or player_id < 1 or player_id > 4:
-            raise PlayerError('illegal number')
+            raise PlayerError("illegal number")
         self.id = player_id
         self.colour = PLAYER_PROPERTIES.player_to_colour[self.id]
         self.colour_rgb = PLAYER_PROPERTIES.player_to_colour_rgb[self.id]
@@ -27,7 +26,7 @@ class Player:
         self.heirs = []
         self.god = None
         self.name = None
-        
+
         self.idea = False
         self.illusion = False
         self.time = 0
@@ -37,12 +36,11 @@ class Player:
         self.temple = PLAYER_PROPERTIES.player_to_temple_square[self.id]
         self.starting_squares = PLAYER_PROPERTIES.player_to_starting_squares[self.id]
         self.temple_area = PLAYER_PROPERTIES.player_to_temple_area[self.id]
-        
+
         self.free_positions = {1, 2, 3, 4, 5}
 
     def __eq__(self, player):
         if type(self) == type(player):
-
             return self.id == player.id
         else:
             return False

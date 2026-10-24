@@ -9,9 +9,3 @@ class SidePanel:
 
     def draw_panel(self):
         pygame.draw.rect(self.screen, BACKGROUND_PANEL, PANEL)
-
-
-
-
-
-

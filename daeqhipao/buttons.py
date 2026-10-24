@@ -46,7 +46,9 @@ class Button:
         self.font_size = min([int(max_width / FONT_RATIOS[FONT]), self.height - 10])
 
     def set_text_position(self):
-        self.text_x = self.x + int((self.width - (self.font_size * FONT_RATIOS[FONT] * len(self.text))) / 2)
+        self.text_x = self.x + int(
+            (self.width - (self.font_size * FONT_RATIOS[FONT] * len(self.text))) / 2
+        )
         self.text_y = self.y + int((self.height - self.font_size) / 2)
 
     def set_font(self):
@@ -60,10 +62,12 @@ class MoveButton(Button):
 
         super().__init__("MOVE", position, dimensions)
 
+
 class PowerButton(Button):
     def __init__(self, position, dimensions, power):
         self.power = power
         super().__init__(power.name, position, dimensions)
+
 
 class ChoiceButton(Button):
     def __init__(self, text, position, dimensions):
@@ -77,12 +81,14 @@ class UsePowerButton(Button):
 
         super().__init__("USE POWER", position, dimensions)
 
+
 class EndTurnButton(Button):
     def __init__(self):
         position = (int(0.7 * HEIGHT), int(0.85 * HEIGHT))
         dimensions = (int(0.2 * HEIGHT), int(HEIGHT / 25))
 
         super().__init__("END TURN", position, dimensions)
+
 
 class ResetSelectionButton(Button):
     def __init__(self):
@@ -99,12 +105,14 @@ class ConfirmButton(Button):
 
         super().__init__("CONFIRM", position, dimensions)
 
+
 class BackButton(Button):
     def __init__(self):
         position = (int(0.1 * HEIGHT), int(0.90 * HEIGHT))
         dimensions = (int(0.2 * HEIGHT), int(HEIGHT / 25))
 
         super().__init__("BACK", position, dimensions)
+
 
 class PlaceBarrierButton(Button):
     def __init__(self):
@@ -113,14 +121,13 @@ class PlaceBarrierButton(Button):
 
         super().__init__("PLACE BARRIER", position, dimensions)
 
+
 class RemoveBarrierButton(Button):
     def __init__(self):
         position = (int(0.7 * HEIGHT), int(0.90 * HEIGHT))
         dimensions = (int(0.2 * HEIGHT), int(HEIGHT / 25))
 
         super().__init__("REMOVE BARRIER", position, dimensions)
-
-
 
 
 MOVE_BUTTON = MoveButton()
@@ -151,7 +158,11 @@ def get_mouse_button(active_buttons, mouse):
 
 def make_buttons():
     buttons = set()
-    new_game = Button("NEW GAME", (HEIGHT + int(PANEL_WIDTH * 0.05), int(9.5 * HEIGHT / 10)), (int(PANEL_WIDTH * 0.9), int(HEIGHT / 25)))
+    new_game = Button(
+        "NEW GAME",
+        (HEIGHT + int(PANEL_WIDTH * 0.05), int(9.5 * HEIGHT / 10)),
+        (int(PANEL_WIDTH * 0.9), int(HEIGHT / 25)),
+    )
     buttons.add(new_game)
 
     return buttons
@@ -163,29 +174,36 @@ def show_piece_buttons(screen, active_buttons):
     active_buttons.add(MOVE_BUTTON)
     active_buttons.add(POWER_BUTTON)
 
+
 def show_move_button(screen, active_buttons):
     MOVE_BUTTON.draw(screen)
     active_buttons.add(MOVE_BUTTON)
+
 
 def show_end_turn_button(screen, active_buttons):
     END_TURN_BUTTON.draw(screen)
     active_buttons.add(END_TURN_BUTTON)
 
+
 def show_power_button(screen, active_buttons):
     POWER_BUTTON.draw(screen)
     active_buttons.add(POWER_BUTTON)
+
 
 def show_confirm_button(screen, active_buttons):
     CONFIRM_BUTTON.draw(screen)
     active_buttons.add(CONFIRM_BUTTON)
 
+
 def show_reset_selection_button(screen, active_buttons):
     RESET_SELECTION_BUTTON.draw(screen)
     active_buttons.add(RESET_SELECTION_BUTTON)
 
+
 def show_back_button(screen, active_buttons):
     BACK_BUTTON.draw(screen)
     active_buttons.add(BACK_BUTTON)
+
 
 def hide_back_button(screen, active_buttons):
     hide_button(BACK_BUTTON, screen, active_buttons)
@@ -202,6 +220,7 @@ def hide_piece_buttons(screen, active_buttons):
     hide_power_buttons(screen, active_buttons)
     hide_choice_buttons(screen, active_buttons)
 
+
 def hide_power_buttons(screen, active_buttons):
     buttons_to_remove = []
     for button in active_buttons:
@@ -210,6 +229,7 @@ def hide_power_buttons(screen, active_buttons):
 
     for button in buttons_to_remove:
         hide_button(button, screen, active_buttons)
+
 
 def hide_choice_buttons(screen, active_buttons):
     buttons_to_remove = []
@@ -220,31 +240,39 @@ def hide_choice_buttons(screen, active_buttons):
     for button in buttons_to_remove:
         hide_button(button, screen, active_buttons)
 
+
 def hide_move_button(screen, active_buttons):
     hide_button(MOVE_BUTTON, screen, active_buttons)
+
 
 def hide_power_button(screen, active_buttons):
     hide_button(POWER_BUTTON, screen, active_buttons)
 
+
 def show_power_choice_button(screen, active_buttons, button):
     button.draw(screen)
     active_buttons.add(button)
+
 
 def show_remove_barrier_button(screen, active_buttons):
 
     REMOVE_BARRIER_BUTTON.draw(screen)
     active_buttons.add(REMOVE_BARRIER_BUTTON)
 
+
 def show_place_barrier_button(screen, active_buttons):
 
     PLACE_BARRIER_BUTTON.draw(screen)
     active_buttons.add(PLACE_BARRIER_BUTTON)
 
+
 def hide_remove_barrier_button(screen, active_buttons):
     hide_button(REMOVE_BARRIER_BUTTON, screen, active_buttons)
 
+
 def hide_place_barrier_button(screen, active_buttons):
     hide_button(PLACE_BARRIER_BUTTON, screen, active_buttons)
+
 
 def hide_button(button, screen, active_buttons):
     try:
@@ -253,12 +281,3 @@ def hide_button(button, screen, active_buttons):
         pass
 
     button.erase_button(screen)
-
-
-
-
-
-
-
-
-
