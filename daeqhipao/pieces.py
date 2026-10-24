@@ -175,7 +175,7 @@ class Piece:
         self.symbol_rectangle = pygame.Rect(x, y, SYMBOL_SIZE, SYMBOL_SIZE)
 
     def load_symbol_image(self):
-        symbol = os.path.join(SYMBOL_DIR, f'{self.name.lower()}.png')
+        symbol = os.path.join(SYMBOL_DIR, f'{self.name}.png')
         self.symbol_image = pygame.image.load(symbol)
 
     def set_location(self, location, board):
