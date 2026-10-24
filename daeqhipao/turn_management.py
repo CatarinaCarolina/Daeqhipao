@@ -513,20 +513,20 @@ class TurnManager:
         elif state == 'place barrier' or state == 'place barrier start turn':
             if not field.occupied and not field.type == 'temple square':
                 self.place_zaopeng_barrier(field)
-            if state == 'place barrier':
-                self.next_turn()
-            else:
-                self.reset_piece_selection()
-                hide_piece_buttons(self.screen, self.active_buttons)
+                if state == 'place barrier':
+                    self.next_turn()
+                else:
+                    self.reset_piece_selection()
+                    hide_piece_buttons(self.screen, self.active_buttons)
 
         elif state == 'remove barrier' or state == 'remove barrier start turn':
             if field.barrier:
                 self.remove_zaopeng_barrier(field)
-            if state == 'remove barrier':
-                self.next_turn()
-            else:
-                self.reset_piece_selection()
-                hide_piece_buttons(self.screen, self.active_buttons)
+                if state == 'remove barrier':
+                    self.next_turn()
+                else:
+                    self.reset_piece_selection()
+                    hide_piece_buttons(self.screen, self.active_buttons)
 
         elif state == 'select use power or end turn':
             self.random_click()
