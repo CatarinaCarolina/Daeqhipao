@@ -84,9 +84,7 @@ class Power:
             return True
         targets = self.get_target_fields(pieces, barriers, board, players)
 
-        if not targets:
-            return False
-        return True
+        return bool(targets)
 
     def set_target_types(self, selection_types):
         self.target_nr = len(selection_types)
@@ -130,7 +128,7 @@ class Power:
 
             if hovered_field:
                 for field in board.fields:
-                    if not field.type == "temple square":
+                    if field.type != "temple square":
                         if field.rectangle.collidepoint(mouse):
                             hovered = True
                         else:
@@ -280,47 +278,30 @@ class Power:
         elif self.name == "Impression":
             if self.target_nr == 1:
                 targets = self.get_target_fields_1(pieces)
-        elif self.name == "Earth":
+        elif self.name == "Earth" or self.name == "Void":
             if self.target_nr == 2:
                 targets = self.get_target_fields_1(board)
             elif self.target_nr == 1:
                 targets = self.get_target_fields_2(board)
-        elif self.name == "Void":
-            if self.target_nr == 2:
-                targets = self.get_target_fields_1(board)
-            elif self.target_nr == 1:
-                targets = self.get_target_fields_2(board)
-        elif self.name == "Ocean":
+        elif self.name == "Ocean" or self.name == "Drought":
             targets = self.get_target_fields_1(board)
-        elif self.name == "Drought":
-            targets = self.get_target_fields_1(board)
-        elif self.name == "Life":
+        elif self.name == "Life" or self.name == "Death":
             targets = self.get_target_fields_1(pieces)
-        elif self.name == "Death":
-            targets = self.get_target_fields_1(pieces)
-        elif self.name == "Sun":
+        elif (
+            self.name == "Sun"
+            or self.name == "Wind"
+            or self.name == "Sky"
+            or self.name == "Shadow"
+        ):
             targets = self.get_target_fields_1(board)
-        elif self.name == "Wind":
-            targets = self.get_target_fields_1(board)
-        elif self.name == "Sky":
-            targets = self.get_target_fields_1(board)
-        elif self.name == "Shadow":
-            targets = self.get_target_fields_1(board)
-        elif self.name == "Idea":
-            targets = self.get_target_fields_1(players, pieces)
-        elif self.name == "Illusion":
+        elif self.name == "Idea" or self.name == "Illusion":
             targets = self.get_target_fields_1(players, pieces)
         elif self.name == "Quake":
             if self.target_nr == 2:
                 targets = self.get_target_fields_1(board)
             elif self.target_nr == 1:
                 targets = self.get_target_fields_2(board)
-        elif self.name == "Wave":
-            if self.target_nr == 2:
-                targets = self.get_target_fields_1(board, pieces)
-            elif self.target_nr == 1:
-                targets = self.get_target_fields_2(board)
-        elif self.name == "Fog":
+        elif self.name == "Wave" or self.name == "Fog":
             if self.target_nr == 2:
                 targets = self.get_target_fields_1(board, pieces)
             elif self.target_nr == 1:
@@ -339,9 +320,7 @@ class Power:
                 targets = self.get_target_fields_1(pieces, board)
             elif self.target_nr == 1:
                 targets = self.get_target_fields_2(board)
-        elif self.name == "Time":
-            targets = self.get_target_fields_1(pieces)
-        elif self.name == "Legacy":
+        elif self.name == "Time" or self.name == "Legacy":
             targets = self.get_target_fields_1(pieces)
         elif self.name == "Metamorphosis":
             if self.target_nr == 2:
@@ -356,39 +335,29 @@ class Power:
             self.use_power()
         elif self.name == "Impression":
             self.use_power(board)
-        elif self.name == "Earth":
-            self.use_power(barriers, board)
-        elif self.name == "Void":
+        elif self.name == "Earth" or self.name == "Void":
             self.use_power(barriers, board)
         elif self.name == "Communication":
             pass
-        elif self.name == "Ocean":
+        elif self.name == "Ocean" or self.name == "Drought":
             self.use_power(board)
-        elif self.name == "Drought":
-            self.use_power(board)
-        elif self.name == "Life":
+        elif self.name == "Life" or self.name == "Death":
             self.use_power(pieces)
-        elif self.name == "Death":
-            self.use_power(pieces)
-        elif self.name == "Sun":
+        elif (
+            self.name == "Sun"
+            or self.name == "Wind"
+            or self.name == "Sky"
+            or self.name == "Shadow"
+        ):
             self.use_power(board)
-        elif self.name == "Wind":
-            self.use_power(board)
-        elif self.name == "Sky":
-            self.use_power(board)
-        elif self.name == "Shadow":
-            self.use_power(board)
-        elif self.name == "Idea":
+        elif self.name == "Idea" or self.name == "Illusion":
             self.use_power()
-        elif self.name == "Illusion":
-            self.use_power()
-        elif self.name == "Quake":
-            self.use_power(board)
-        elif self.name == "Wave":
-            self.use_power(board)
-        elif self.name == "Fog":
-            self.use_power(board)
-        elif self.name == "Bloodmaker":
+        elif (
+            self.name == "Quake"
+            or self.name == "Wave"
+            or self.name == "Fog"
+            or self.name == "Bloodmaker"
+        ):
             self.use_power(board)
         elif self.name == "Metalmaker":
             self.use_power(board, barriers)
@@ -396,13 +365,9 @@ class Power:
             self.use_power(board)
         elif self.name == "Night":
             self.use_power(board, barriers)
-        elif self.name == "End":
+        elif self.name == "End" or self.name == "Mind":
             self.use_power(board)
-        elif self.name == "Mind":
-            self.use_power(board)
-        elif self.name == "Legacy":
-            self.use_power()
-        elif self.name == "Time":
+        elif self.name == "Legacy" or self.name == "Time":
             self.use_power()
         elif self.name == "Metamorphosis":
             self.use_power(board, pieces)
@@ -611,17 +576,16 @@ class LegacyPower(Power):
     def get_target_fields_1(self, pieces):
         target_fields = []
         for piece in pieces.spiritual_pieces:
-            if not piece.immune("Legacy"):
-                if self.potency_or_frequency == "potency" and piece.name in POTENCY:
-                    target_fields.append(piece.location)
-                elif (
+            if not piece.immune("Legacy") and (
+                self.potency_or_frequency == "potency"
+                and piece.name in POTENCY
+                or (
                     self.potency_or_frequency == "frequency" and piece.name in FREQUENCY
-                ):
-                    target_fields.append(piece.location)
-                elif not self.potency_or_frequency and (
-                    piece.name in POTENCY or piece.name in FREQUENCY
-                ):
-                    target_fields.append(piece.location)
+                )
+                or not self.potency_or_frequency
+                and (piece.name in POTENCY or piece.name in FREQUENCY)
+            ):
+                target_fields.append(piece.location)
 
         return target_fields
 
@@ -645,17 +609,16 @@ class TimePower(Power):
     def get_target_fields_1(self, pieces):
         target_fields = []
         for piece in pieces.physical_pieces:
-            if not piece.immune("Time"):
-                if self.potency_or_frequency == "potency" and piece.name in POTENCY:
-                    target_fields.append(piece.location)
-                elif (
+            if not piece.immune("Time") and (
+                self.potency_or_frequency == "potency"
+                and piece.name in POTENCY
+                or (
                     self.potency_or_frequency == "frequency" and piece.name in FREQUENCY
-                ):
-                    target_fields.append(piece.location)
-                elif not self.potency_or_frequency and (
-                    piece.name in POTENCY or piece.name in FREQUENCY
-                ):
-                    target_fields.append(piece.location)
+                )
+                or not self.potency_or_frequency
+                and (piece.name in POTENCY or piece.name in FREQUENCY)
+            ):
+                target_fields.append(piece.location)
 
         return target_fields
 
@@ -685,12 +648,15 @@ class IllusionPower(Power):
         target_fields = []
 
         for piece in pieces.pieces:
-            if piece.active and not piece.immune("Illusion"):
-                if piece.player in legal_players:
-                    target_fields.append(piece.location)
-                elif piece.player in idea_players:
-                    if piece.idea:
-                        target_fields.append(piece.location)
+            if (
+                piece.active
+                and not piece.immune("Illusion")
+                and (
+                    piece.player in legal_players
+                    or (piece.player in idea_players and piece.idea)
+                )
+            ):
+                target_fields.append(piece.location)
 
         return target_fields
 
@@ -720,12 +686,15 @@ class IdeaPower(Power):
         target_fields = []
 
         for piece in pieces.pieces:
-            if piece.active and not piece.immune("Idea"):
-                if piece.player in legal_players:
-                    target_fields.append(piece.location)
-                elif piece.player in illusion_players:
-                    if piece.illusion:
-                        target_fields.append(piece.location)
+            if (
+                piece.active
+                and not piece.immune("Idea")
+                and (
+                    piece.player in legal_players
+                    or (piece.player in illusion_players and piece.illusion)
+                )
+            ):
+                target_fields.append(piece.location)
 
         return target_fields
 
@@ -752,7 +721,7 @@ class MetamorphosisPower(Power):
 
         targets = []
 
-        for name, god_group in pieces.god_groups.items():
+        for god_group in pieces.god_groups.values():
             true_targets = []
             if len(god_group) > 1:
                 for piece in god_group:
@@ -769,7 +738,7 @@ class MetamorphosisPower(Power):
         for piece in pieces.god_groups[self.selected_piece_1.god_group]:
             if (
                 piece.active
-                and not piece == self.selected_piece_1
+                and piece != self.selected_piece_1
                 and not piece.immune("Metamorphosis")
             ):
                 targets.append(piece.location)
@@ -846,7 +815,7 @@ class EarthPower(Power):
         target_fields = []
 
         for field in board.fields:
-            if not field.occupied and not field.type == "temple square":
+            if not field.occupied and field.type != "temple square":
                 target_fields.append(field)
 
         return target_fields
@@ -856,9 +825,9 @@ class EarthPower(Power):
 
         for field in board.fields:
             if (
-                not field == self.selected_field_1
+                field != self.selected_field_1
                 and not field.occupied
-                and not field.type == "temple square"
+                and field.type != "temple square"
             ):
                 target_fields.append(field)
 
@@ -885,7 +854,7 @@ class OceanPower(Power):
         target_fields = []
 
         for field in board.fields:
-            if not field.type == "temple square" and not field.in_temple_area():
+            if field.type != "temple square" and not field.in_temple_area():
                 target_fields.append(field)
 
         return target_fields
@@ -974,12 +943,9 @@ class SunPower(Power):
             return False
         if pass_through_field.type == "no field":
             return False
-        if target_field.check_legal_movement(
+        return target_field.check_legal_movement(
             self.piece, using_power=True
-        ) and pass_through_field.check_legal_movement(self.piece, using_power=True):
-            return True
-        else:
-            return False
+        ) and pass_through_field.check_legal_movement(self.piece, using_power=True)
 
 
 class QuakePower(Power):
@@ -1006,7 +972,7 @@ class QuakePower(Power):
         target_fields = []
 
         for field in board.fields:
-            if not field.occupied and not field.type == "temple square":
+            if not field.occupied and field.type != "temple square":
                 target_fields.append(field)
 
         return target_fields
@@ -1096,12 +1062,9 @@ class WindPower(Power):
             return False
         if pass_through_field.type == "no field":
             return False
-        if target_field.check_legal_movement(
+        return target_field.check_legal_movement(
             self.piece, using_power=True
-        ) and pass_through_field.check_legal_movement(self.piece, using_power=True):
-            return True
-        else:
-            return False
+        ) and pass_through_field.check_legal_movement(self.piece, using_power=True)
 
 
 class ShadowPower(Power):
@@ -1208,10 +1171,7 @@ class BloodmakerPower(Power):
     def check_swap_legal(self, barrier, piece):
         if piece.immune("Bloodmaker"):
             return False
-        if not barrier.location.permitted_area_condition(piece):
-            return False
-
-        return True
+        return barrier.location.permitted_area_condition(piece)
 
 
 class FogPower(Power):
@@ -1262,10 +1222,7 @@ class FogPower(Power):
             return False
         if not piece_1.location.permitted_area_condition(piece_2):
             return False
-        if not piece_2.location.permitted_area_condition(piece_1):
-            return False
-
-        return True
+        return piece_2.location.permitted_area_condition(piece_1)
 
 
 class FlamePower(Power):
@@ -1293,19 +1250,19 @@ class FlamePower(Power):
                 affected_fields.append(field)
 
         field_1 = board.get_field(self.piece.location.x, self.piece.location.y + 2)
-        if field_1 and not field_1.type == "temple square":
+        if field_1 and field_1.type != "temple square":
             affected_fields.append(field_1)
 
         field_2 = board.get_field(self.piece.location.x, self.piece.location.y - 2)
-        if field_2 and not field_2.type == "temple square":
+        if field_2 and field_2.type != "temple square":
             affected_fields.append(field_2)
 
         field_3 = board.get_field(self.piece.location.x + 2, self.piece.location.y)
-        if field_3 and not field_3.type == "temple square":
+        if field_3 and field_3.type != "temple square":
             affected_fields.append(field_3)
 
         field_4 = board.get_field(self.piece.location.x - 2, self.piece.location.y)
-        if field_4 and not field_4.type == "temple square":
+        if field_4 and field_4.type != "temple square":
             affected_fields.append(field_4)
 
         return affected_fields
@@ -1333,7 +1290,7 @@ class VoidPower(Power):
         target_fields = []
 
         for field in board.fields:
-            if field.barrier and not field.barrier == self.selected_barrier_1:
+            if field.barrier and field.barrier != self.selected_barrier_1:
                 target_fields.append(field)
 
         return target_fields
@@ -1357,7 +1314,7 @@ class DroughtPower(Power):
         target_fields = []
 
         for field in board.fields:
-            if not field.type == "temple square" and not field.in_temple_area():
+            if field.type != "temple square" and not field.in_temple_area():
                 target_fields.append(field)
 
         return target_fields
@@ -1384,13 +1341,12 @@ class EndPower(Power):
     def get_target_fields_1(self, pieces, board):
         target_fields = []
         for piece in pieces.pieces:
-            if not piece.immune("End"):
-                if not piece.location.in_temple_area():
-                    temple_area = board.get_temple_area(piece.player)
-                    for field in temple_area:
-                        if field.check_legal_movement(piece, using_power=True):
-                            target_fields.append(piece.location)
-                            break
+            if not piece.immune("End") and not piece.location.in_temple_area():
+                temple_area = board.get_temple_area(piece.player)
+                for field in temple_area:
+                    if field.check_legal_movement(piece, using_power=True):
+                        target_fields.append(piece.location)
+                        break
 
         return target_fields
 

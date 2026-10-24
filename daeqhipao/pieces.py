@@ -1,11 +1,50 @@
-#!/usr/bin/env python
-
 import os
+
 import pygame
 
-from daeqhipao.illegal_moves import *
-from daeqhipao.style import *
-from daeqhipao.powers import *
+from daeqhipao.illegal_moves import IllegalPower, Immune
+from daeqhipao.powers import (
+    BlindnessPower,
+    BloodmakerPower,
+    CommunicationPower,
+    DeathPower,
+    DroughtPower,
+    EarthPower,
+    EndPower,
+    FamiliarityPower,
+    FlamePower,
+    FogPower,
+    IdeaPower,
+    IllusionPower,
+    ImpressionPower,
+    LegacyPower,
+    LiberationPower,
+    LifePower,
+    MetalmakerPower,
+    MetamorphosisPower,
+    MindPower,
+    NightPower,
+    OblivionPower,
+    OceanPower,
+    PerceptionPower,
+    QuakePower,
+    ShadowPower,
+    SkyPower,
+    SunPower,
+    TimePower,
+    UnionPower,
+    VoidPower,
+    WavePower,
+    WindPower,
+)
+from daeqhipao.style import (
+    BACKGROUND_BOARD,
+    PIECE_PADDING,
+    PIECE_SIZE,
+    SQUARE_WIDTH,
+    SYMBOL_PADDING,
+    SYMBOL_SIZE,
+)
 
 SYMBOL_DIR = os.path.join(os.path.dirname(__file__), "images", "symbols")
 
@@ -30,20 +69,18 @@ class Pieces:
 
     def check_zaopeng(self, player):
         for piece in self.pieces:
-            if piece.player == player:
-                if piece.active:
-                    return False
+            if piece.player == player and piece.active:
+                return False
 
         return True
 
     def zaopeng(self, player):
         for piece in self.pieces:
-            if piece.player == player:
-                if not piece.active:
-                    if not piece.oblivion:
-                        piece.wake(self)
-                    else:
-                        piece.countdown_oblivion()
+            if piece.player == player and not piece.active:
+                if not piece.oblivion:
+                    piece.wake(self)
+                else:
+                    piece.countdown_oblivion()
         self.set_active_and_passive_pieces()
 
     def get_pieces_player(self, player):
@@ -125,10 +162,7 @@ class Piece:
 
     def __eq__(self, piece):
         if type(self) == type(piece):
-            if self.id == piece.id:
-                return True
-            else:
-                return False
+            return self.id == piece.id
         else:
             return False
 
@@ -150,10 +184,7 @@ class Piece:
                 if piece.active:
                     active_count += 1
 
-            if active_count == 1:
-                return True
-            else:
-                return False
+            return active_count == 1
         else:
             return False
 
@@ -304,7 +335,7 @@ class Piece:
         self.union = True
         self.union_partners.add(piece)
         for piece_2 in piece.union_partners:
-            if not piece_2 == self:
+            if piece_2 != self:
                 self.union_partners.add(piece_2)
 
     def trigger_union(self, pieces, wake_or_sleep):
@@ -395,15 +426,9 @@ class Piece:
             return True
 
         elif self.type == "God":
-            if power in [p.name for p in self.powers]:
-                return True
-            else:
-                return False
+            return power in [p.name for p in self.powers]
         elif self.type == "Heir":
-            if power == self.name:
-                return True
-            else:
-                return False
+            return power == self.name
 
     def move(self, target_location, board):
         original_x = self.location.x
@@ -433,7 +458,7 @@ class Piece:
     def select_piece(self, piece, power):
 
         if piece.immune(power):
-            raise Immune("%s is immune to the power %s." % (piece, power))
+            raise Immune(f"{piece} is immune to the power {power}.")
 
 
 class God(Piece):

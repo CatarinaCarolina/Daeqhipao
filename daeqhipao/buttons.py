@@ -1,5 +1,16 @@
 import pygame
-from daeqhipao.style import *
+
+from daeqhipao.style import (
+    BACKGROUND_BOARD,
+    BLACK,
+    BUTTON_COLOUR,
+    BUTTON_HIGHLIGHT_COLOUR,
+    BUTTON_TEXT_COLOUR,
+    FONT,
+    FONT_RATIOS,
+    HEIGHT,
+    PANEL_WIDTH,
+)
 
 
 class Button:

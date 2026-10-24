@@ -1,4 +1,5 @@
 import math
+
 import pygame
 
 pygame.font.init()
@@ -23,14 +24,14 @@ FONT_RATIOS = {"couriernew": 0.6}
 
 SQUARE_WIDTH = int(HEIGHT / 13)
 
-PIECE_PADDING = int(math.ceil(3 * SQUARE_WIDTH / 100))
-SYMBOL_PADDING = int(math.ceil(28 * SQUARE_WIDTH / 100))
+PIECE_PADDING = math.ceil(3 * SQUARE_WIDTH / 100)
+SYMBOL_PADDING = math.ceil(28 * SQUARE_WIDTH / 100)
 
 PIECE_SIZE = int(94 * SQUARE_WIDTH / 100)
 SYMBOL_SIZE = int(44 * SQUARE_WIDTH / 100)
 
 BARRIER_SIZE = int(92 * SQUARE_WIDTH / 100)
-BARRIER_PADDING = int(math.ceil(4 * SQUARE_WIDTH / 100))
+BARRIER_PADDING = math.ceil(4 * SQUARE_WIDTH / 100)
 
 BUTTON_COLOUR = (170, 170, 170)
 BUTTON_HIGHLIGHT_COLOUR = (200, 200, 200)
@@ -43,4 +44,4 @@ PIECE_BUTTON_WIDTH = int(HEIGHT / 6)
 
 PIECE_BUTTON_HEIGHT = int(HEIGHT / 25)
 
-CONDITION_SIZE = int(math.ceil(SQUARE_WIDTH / 5))
+CONDITION_SIZE = math.ceil(SQUARE_WIDTH / 5)

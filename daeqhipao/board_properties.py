@@ -1,5 +1,8 @@
+from typing import ClassVar
+
+
 class BoardProperties:
-    starting_squares = [
+    starting_squares: ClassVar[list[tuple[int, int]]] = [
         (3, 9),
         (4, 9),
         (5, 9),
@@ -22,9 +25,9 @@ class BoardProperties:
         (9, 7),
     ]
 
-    temple_squares = [(0, 5), (10, 5), (5, 0), (5, 10)]
+    temple_squares: ClassVar[list[tuple[int, int]]] = [(0, 5), (10, 5), (5, 0), (5, 10)]
 
-    temple_area_squares = [
+    temple_area_squares: ClassVar[list[tuple[int, int]]] = [
         (3, 8),
         (4, 8),
         (5, 8),

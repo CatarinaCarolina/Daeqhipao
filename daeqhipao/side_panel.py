@@ -1,6 +1,6 @@
 import pygame
 
-from daeqhipao.style import *
+from daeqhipao.style import BACKGROUND_PANEL, PANEL
 
 
 class SidePanel:

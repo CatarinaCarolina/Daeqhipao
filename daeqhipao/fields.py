@@ -1,6 +1,8 @@
-import pygame
 import os
-from daeqhipao.style import *
+
+import pygame
+
+from daeqhipao.style import BACKGROUND_BOARD, CONDITION_SIZE, HIGHLIGHT_BOARD
 
 CONDITION_IMAGE_DIR = os.path.join(os.path.dirname(__file__), "images", "conditions")
 OCEAN_IMAGE = pygame.image.load(os.path.join(CONDITION_IMAGE_DIR, "ocean.svg"))
@@ -50,14 +52,11 @@ class Field:
         self.flame_rectangle = None
 
     def __repr__(self):
-        return "%d-%d" % (self.x, self.y)
+        return f"{self.x}-{self.y}"
 
     def __eq__(self, field):
         if type(self) == type(field):
-            if self.x == field.x and self.y == field.y:
-                return True
-            else:
-                return False
+            return self.x == field.x and self.y == field.y
         else:
             return False
 
@@ -162,10 +161,7 @@ class Field:
         self.owner = player
 
     def in_temple_area(self):
-        if self.type == "temple area" or self.type == "starting square":
-            return True
-        else:
-            return False
+        return self.type == "temple area" or self.type == "starting square"
 
     def activate_flame(self, piece):
         self.flame = True
@@ -194,14 +190,7 @@ class Field:
         diff_x = abs(self.x - field.x)
         diff_y = abs(self.y - field.y)
 
-        if diff_x > 1:
-            return False
-        elif diff_y > 1:
-            return False
-        elif diff_x == 0 and diff_y == 0:
-            return False
-        else:
-            return True
+        return not (diff_x > 1 or diff_y > 1 or diff_x == 0 and diff_y == 0)
 
     def get_adjacent(self, board, type="all"):
 
@@ -248,27 +237,22 @@ class Field:
         return adjacent
 
     def check_legal_movement(self, piece, using_power=False):
-        if self.type == "no field":
-            return False
-        elif self.occupied:
-            return False
-        elif self.type == "temple square" and self.owner == piece.player:
-            return False
-        elif not self.permitted_area_condition(piece):
-            return False
-        elif self.mind and using_power and not piece.immune("Mind"):
-            return False
-
-        return True
+        return not (
+            self.type == "no field"
+            or self.occupied
+            or self.type == "temple square"
+            and self.owner == piece.player
+            or not self.permitted_area_condition(piece)
+            or self.mind
+            and using_power
+            and not piece.immune("Mind")
+        )
 
     def check_flame(self, piece):
         if self.flame:
             if piece.player in self.flame_counts and len(self.flame_counts) == 1:
                 return False
-            if piece.immune("Flame"):
-                return False
-
-            return True
+            return not piece.immune("Flame")
 
         else:
             return False
@@ -278,10 +262,7 @@ class Field:
             return False
         if self.drought and piece.gender == "male" and not piece.immune("Drought"):
             return False
-        if self.check_flame(piece):
-            return False
-
-        return True
+        return not self.check_flame(piece)
 
     def get_legal_adjacent(self, board, piece):
 

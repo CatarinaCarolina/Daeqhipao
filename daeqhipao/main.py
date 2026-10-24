@@ -1,13 +1,25 @@
 import pygame
-from pygame.locals import *
+from pygame.locals import MOUSEBUTTONDOWN, QUIT
 
-from daeqhipao.board import Board
-from daeqhipao.pieces import *
-from daeqhipao.players import *
-from daeqhipao.side_panel import SidePanel
-from daeqhipao.buttons import *
-from daeqhipao.turn_management import TurnManager
 from daeqhipao.barriers import BARRIERS
+from daeqhipao.board import Board
+from daeqhipao.buttons import highlight_buttons
+from daeqhipao.pieces import (
+    Alchemist,
+    Builder,
+    Drought,
+    Earth,
+    Flame,
+    Illusion,
+    Metamorphosis,
+    Pieces,
+    Sky,
+    Time,
+    Void,
+)
+from daeqhipao.players import Player
+from daeqhipao.side_panel import SidePanel
+from daeqhipao.turn_management import TurnManager
 
 size = 1200, 800
 width, height = size
@@ -24,8 +36,6 @@ def main():
     side_panel = SidePanel(screen)
     board.draw_frame()
     side_panel.draw_panel()
-
-    active_buttons = make_buttons()
 
     player_1 = Player(1)
     player_3 = Player(3)

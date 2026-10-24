@@ -1,5 +1,11 @@
 import pygame
-from daeqhipao.style import *
+
+from daeqhipao.style import (
+    BACKGROUND_BOARD,
+    BARRIER_PADDING,
+    BARRIER_SIZE,
+    SQUARE_WIDTH,
+)
 
 
 class Barrier:
@@ -14,10 +20,7 @@ class Barrier:
 
     def __eq__(self, barrier):
         if type(self) == type(barrier):
-            if self.id == barrier.id:
-                return True
-            else:
-                return False
+            return self.id == barrier.id
         else:
             return False
 

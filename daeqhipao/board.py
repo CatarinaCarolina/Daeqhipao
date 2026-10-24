@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """
 Gaming board
 """
@@ -8,13 +6,19 @@ import os
 
 import pygame
 
-from daeqhipao.illegal_moves import *
-from daeqhipao.board_properties import BOARD_PROPERTIES
-from daeqhipao.style import *
-from daeqhipao.fields import Field
 from daeqhipao.barriers import Barrier
+from daeqhipao.board_properties import BOARD_PROPERTIES
+from daeqhipao.fields import Field
 from daeqhipao.pieces import Piece
-
+from daeqhipao.style import (
+    BARRIER_SIZE,
+    BLACK,
+    PIECE_PADDING,
+    PIECE_SIZE,
+    SQUARE_WIDTH,
+    SYMBOL_PADDING,
+    SYMBOL_SIZE,
+)
 
 IMAGE_DIR = os.path.join(os.path.dirname(__file__), "images")
 PIECE_IMAGE_DIR = os.path.join(IMAGE_DIR, "pieces")
@@ -152,7 +156,7 @@ class Board:
     def set_all_fields(self):
         self.fields = []
         for i, row in enumerate(self.board):
-            for j, column in enumerate(row):
+            for j, _column in enumerate(row):
                 field = self.get_field(i, j)
                 if field:
                     self.fields.append(field)
@@ -224,7 +228,7 @@ class Board:
     def assign_field_types(self):
 
         for i, row in enumerate(self.board):
-            for j, column in enumerate(row):
+            for j, _column in enumerate(row):
                 if i == 0 or i == 10:
                     if j != 5:
                         self.board[i][j].type = "no field"
@@ -256,7 +260,7 @@ class Board:
         string = ""
         for row in self.board:
             for column in row:
-                string += "%s\t" % column.type
+                string += f"{column.type}\t"
             string += "\n"
         print(string)
 

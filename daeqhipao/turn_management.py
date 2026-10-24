@@ -1,6 +1,25 @@
-import pygame
-from daeqhipao.buttons import *
+from daeqhipao.buttons import (
+    PLACE_BARRIER_BUTTON,
+    REMOVE_BARRIER_BUTTON,
+    Button,
+    ChoiceButton,
+    PowerButton,
+    get_mouse_button,
+    hide_move_button,
+    hide_piece_buttons,
+    make_buttons,
+    show_confirm_button,
+    show_end_turn_button,
+    show_move_button,
+    show_piece_buttons,
+    show_place_barrier_button,
+    show_power_button,
+    show_power_choice_button,
+    show_remove_barrier_button,
+    show_reset_selection_button,
+)
 from daeqhipao.fields import Field
+from daeqhipao.style import BACKGROUND_BOARD, HEIGHT, HIGHLIGHT_BOARD
 
 
 class TurnManager:
@@ -179,14 +198,11 @@ class TurnManager:
                 )
                 can_use_power_from_other_pos = False
 
-                if not piece.illusion:
-                    if not can_use_power_from_current_pos:
-                        for power_cast_location in movement_options:
-                            if self.power_usable_from_square(
-                                power_cast_location, piece
-                            ):
-                                can_use_power_from_other_pos = True
-                                break
+                if not piece.illusion and not can_use_power_from_current_pos:
+                    for power_cast_location in movement_options:
+                        if self.power_usable_from_square(power_cast_location, piece):
+                            can_use_power_from_other_pos = True
+                            break
 
                 if can_use_power_from_current_pos or can_use_power_from_other_pos:
                     pieces_able_to_use_power.append(piece)
@@ -223,9 +239,8 @@ class TurnManager:
 
         if not pieces_able_to_use_power:
             self.current_player.penalty_turns -= 1
-            if not self.selectable_fields:
-                if not self.current_player.penalty_turns:
-                    self.penalty_zaopeng()
+            if not self.selectable_fields and not self.current_player.penalty_turns:
+                self.penalty_zaopeng()
         else:
             self.current_player.penalty_turns = 2
 
@@ -332,10 +347,7 @@ class TurnManager:
 
         piece.move(square_of_origin, self.board)
 
-        if power_usable:
-            return True
-        else:
-            return False
+        return power_usable
 
     def move_piece(self, target_square):
 
@@ -367,9 +379,7 @@ class TurnManager:
         if not self.current_piece.idea:
             show_end_turn_button(self.screen, self.active_buttons)
 
-        if self.current_piece.idea:
-            show_power_button(self.screen, self.active_buttons)
-        elif self.power_usable_from_square(
+        if self.current_piece.idea or self.power_usable_from_square(
             self.current_piece.location, self.current_piece
         ):
             show_power_button(self.screen, self.active_buttons)
@@ -403,13 +413,15 @@ class TurnManager:
             if self.current_piece and self.power and state == "select power target":
                 self.reset_power()
             elif (
-                self.current_piece
+                (
+                    self.current_piece
+                    and self.has_moved
+                    and state == "select use power or end turn"
+                )
+                or self.current_piece
                 and self.has_moved
-                and state == "select use power or end turn"
+                and state == "select power"
             ):
-                pass
-
-            elif self.current_piece and self.has_moved and state == "select power":
                 pass
 
             else:
@@ -540,7 +552,7 @@ class TurnManager:
                 self.reset_power()
 
         elif state == "place barrier" or state == "place barrier start turn":
-            if not field.occupied and not field.type == "temple square":
+            if not field.occupied and field.type != "temple square":
                 self.place_zaopeng_barrier(field)
                 if state == "place barrier":
                     self.next_turn()

@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
-from daeqhipao.pieces import *
-from daeqhipao.illegal_moves import *
+from daeqhipao.illegal_moves import PlayerError
 from daeqhipao.player_properties import PLAYER_PROPERTIES
 
 
