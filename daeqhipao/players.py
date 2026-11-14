@@ -88,6 +88,11 @@ class Player:
         """Increase the Time counter by one."""
         self.time += 1
 
+    def deactivate_time(self) -> None:
+        """Reset the Time counter and the number of Time pieces."""
+        self.time = 0
+        self.time_pieces = 0
+
     def get_all_pieces(self) -> list[Piece | None]:
         """Return the player's heirs followed by their god."""
         all_pieces = self.heirs + [self.god]
