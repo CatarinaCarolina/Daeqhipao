@@ -291,8 +291,13 @@ class TurnManager:
             self.current_player.penalty_turns -= 1
             if not self.selectable_fields and not self.current_player.penalty_turns:
                 self.penalty_zaopeng()
+                return
         else:
             self.current_player.penalty_turns = 2
+
+        # Without this, a player with no piece to select can't end their turn
+        if not self.selectable_fields:
+            show_end_turn_button(self.screen, self.active_buttons)
 
     def select_piece(self, piece: Piece) -> None:
         """Select piece and show the buttons for what it can do."""
@@ -489,6 +494,8 @@ class TurnManager:
 
             else:
                 self.reset_piece_selection()
+                if not self.selectable_fields:
+                    show_end_turn_button(self.screen, self.active_buttons)
 
     def detect_click_location(self, mouse: tuple[int, int]) -> Button | Field | None:
         """Return the button or square under the mouse, or None."""
