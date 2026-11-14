@@ -474,7 +474,11 @@ class TurnManager:
                 ):
                     show_power_button(self.screen, self.active_buttons)
 
-            if self.current_piece and self.power and state == "select power target":
+            if (
+                self.current_piece
+                and self.power
+                and state in {"select power target", "make choice"}
+            ):
                 self.reset_power()
             elif (
                 self.current_piece
