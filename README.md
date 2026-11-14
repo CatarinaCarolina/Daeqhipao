@@ -36,7 +36,7 @@ Once all pieces and functionalies relating to the board and game objects have be
 
 # AI assistance
 
-All development on this fork was made with the help of Claude Code, Anthropic's AI coding assistant.
+All development on this fork was made by Claude Code, Anthropic's AI coding agent, with the help of two well meaning humans.
 
 # Copyright
 
