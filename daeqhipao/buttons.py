@@ -1,16 +1,53 @@
+"""Clickable buttons and helpers to show and hide them."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import pygame
-from daeqhipao.style import *
+
+from daeqhipao.style import (
+    BACKGROUND_BOARD,
+    BLACK,
+    BUTTON_COLOUR,
+    BUTTON_HIGHLIGHT_COLOUR,
+    BUTTON_TEXT_COLOUR,
+    FONT,
+    FONT_RATIOS,
+    HEIGHT,
+    PANEL_WIDTH,
+)
+
+if TYPE_CHECKING:
+    from daeqhipao.powers import Power
 
 
 class Button:
-    def __init__(self, text, position, dimensions, font_size=None):
+    """A rectangular button with centred text.
+
+    Args:
+        text: Label shown on the button.
+        position: Top-left corner in pixels.
+        dimensions: Width and height in pixels.
+        font_size: Font size; fitted to the button when not given.
+    """
+
+    def __init__(
+        self,
+        text: str,
+        position: tuple[int, int],
+        dimensions: tuple[int, int],
+        font_size: int | None = None,
+    ) -> None:
         self.text = text
 
         self.x, self.y = position
         self.width, self.height = dimensions
         self.rectangle = pygame.Rect(position, dimensions)
-        self.font_size = font_size
-        if not self.font_size:
+        self.font_size: int
+        if font_size:
+            self.font_size = font_size
+        else:
             self.set_font_size()
 
         self.set_text_position()
@@ -18,74 +55,104 @@ class Button:
         self.rendered_text = self.font.render(text, True, BUTTON_TEXT_COLOUR)
         self.selected = False
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.text)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Button):
+            return NotImplemented
         return self.text == other.text
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.text
 
-    def highlight(self, screen):
+    def highlight(self, screen: pygame.Surface) -> None:
+        """Draw the button in its highlighted colour."""
         pygame.draw.rect(screen, BUTTON_HIGHLIGHT_COLOUR, self.rectangle)
         pygame.draw.rect(screen, BLACK, self.rectangle, 2)
         screen.blit(self.rendered_text, (self.text_x, self.text_y))
 
-    def draw(self, screen):
+    def draw(self, screen: pygame.Surface) -> None:
+        """Draw the button in its normal colour."""
         pygame.draw.rect(screen, BUTTON_COLOUR, self.rectangle)
         pygame.draw.rect(screen, BLACK, self.rectangle, 2)
         screen.blit(self.rendered_text, (self.text_x, self.text_y))
 
-    def erase_button(self, screen):
+    def erase_button(self, screen: pygame.Surface) -> None:
+        """Paint over the button with the board background."""
         pygame.draw.rect(screen, BACKGROUND_BOARD, self.rectangle)
         pygame.draw.rect(screen, BACKGROUND_BOARD, self.rectangle, 2)
 
-    def set_font_size(self):
+    def set_font_size(self) -> None:
+        """Pick the largest font size that fits the text inside the button."""
         max_width = (self.width - 10) / len(self.text)
         self.font_size = min([int(max_width / FONT_RATIOS[FONT]), self.height - 10])
 
-    def set_text_position(self):
-        self.text_x = self.x + int((self.width - (self.font_size * FONT_RATIOS[FONT] * len(self.text))) / 2)
+    def set_text_position(self) -> None:
+        """Compute where to draw the text so that it is centred."""
+        self.text_x = self.x + int(
+            (self.width - (self.font_size * FONT_RATIOS[FONT] * len(self.text))) / 2
+        )
         self.text_y = self.y + int((self.height - self.font_size) / 2)
 
-    def set_font(self):
+    def set_font(self) -> None:
+        """Load the button font at the current font size."""
         self.font = pygame.font.SysFont(FONT, self.font_size, bold=True)
 
 
 class MoveButton(Button):
-    def __init__(self):
+    """The MOVE button."""
+
+    def __init__(self) -> None:
         position = (int(0.7 * HEIGHT), int(0.85 * HEIGHT))
         dimensions = (int(0.2 * HEIGHT), int(HEIGHT / 25))
 
         super().__init__("MOVE", position, dimensions)
 
+
 class PowerButton(Button):
-    def __init__(self, position, dimensions, power):
+    """A button for one of a god's powers."""
+
+    def __init__(
+        self, position: tuple[int, int], dimensions: tuple[int, int], power: Power
+    ) -> None:
         self.power = power
         super().__init__(power.name, position, dimensions)
 
+
 class ChoiceButton(Button):
-    def __init__(self, text, position, dimensions):
+    """A button for one of a power's choices, such as how many barriers to place."""
+
+    def __init__(
+        self, text: str, position: tuple[int, int], dimensions: tuple[int, int]
+    ) -> None:
         super().__init__(text, position, dimensions)
 
 
 class UsePowerButton(Button):
-    def __init__(self):
+    """The USE POWER button."""
+
+    def __init__(self) -> None:
         position = (int(0.7 * HEIGHT), int(0.90 * HEIGHT))
         dimensions = (int(0.2 * HEIGHT), int(HEIGHT / 25))
 
         super().__init__("USE POWER", position, dimensions)
 
+
 class EndTurnButton(Button):
-    def __init__(self):
+    """The END TURN button."""
+
+    def __init__(self) -> None:
         position = (int(0.7 * HEIGHT), int(0.85 * HEIGHT))
         dimensions = (int(0.2 * HEIGHT), int(HEIGHT / 25))
 
         super().__init__("END TURN", position, dimensions)
 
+
 class ResetSelectionButton(Button):
-    def __init__(self):
+    """The RESET SELECTION button."""
+
+    def __init__(self) -> None:
         position = (int(0.7 * HEIGHT), int(0.85 * HEIGHT))
         dimensions = (int(0.2 * HEIGHT), int(HEIGHT / 25))
 
@@ -93,34 +160,43 @@ class ResetSelectionButton(Button):
 
 
 class ConfirmButton(Button):
-    def __init__(self):
+    """The CONFIRM button."""
+
+    def __init__(self) -> None:
         position = (int(0.7 * HEIGHT), int(0.90 * HEIGHT))
         dimensions = (int(0.2 * HEIGHT), int(HEIGHT / 25))
 
         super().__init__("CONFIRM", position, dimensions)
 
+
 class BackButton(Button):
-    def __init__(self):
+    """The BACK button."""
+
+    def __init__(self) -> None:
         position = (int(0.1 * HEIGHT), int(0.90 * HEIGHT))
         dimensions = (int(0.2 * HEIGHT), int(HEIGHT / 25))
 
         super().__init__("BACK", position, dimensions)
 
+
 class PlaceBarrierButton(Button):
-    def __init__(self):
+    """The PLACE BARRIER button, shown during a Zaopeng."""
+
+    def __init__(self) -> None:
         position = (int(0.7 * HEIGHT), int(0.85 * HEIGHT))
         dimensions = (int(0.2 * HEIGHT), int(HEIGHT / 25))
 
         super().__init__("PLACE BARRIER", position, dimensions)
 
+
 class RemoveBarrierButton(Button):
-    def __init__(self):
+    """The REMOVE BARRIER button, shown during a Zaopeng."""
+
+    def __init__(self) -> None:
         position = (int(0.7 * HEIGHT), int(0.90 * HEIGHT))
         dimensions = (int(0.2 * HEIGHT), int(HEIGHT / 25))
 
         super().__init__("REMOVE BARRIER", position, dimensions)
-
-
 
 
 MOVE_BUTTON = MoveButton()
@@ -133,7 +209,10 @@ PLACE_BARRIER_BUTTON = PlaceBarrierButton()
 REMOVE_BARRIER_BUTTON = RemoveBarrierButton()
 
 
-def highlight_buttons(active_buttons, screen, mouse):
+def highlight_buttons(
+    active_buttons: set[Button], screen: pygame.Surface, mouse: tuple[int, int]
+) -> None:
+    """Draw the active buttons, highlighting the one under the mouse and any selected one."""
     for button in active_buttons:
         if button.rectangle.collidepoint(mouse) or button.selected:
             button.highlight(screen)
@@ -141,7 +220,10 @@ def highlight_buttons(active_buttons, screen, mouse):
             button.draw(screen)
 
 
-def get_mouse_button(active_buttons, mouse):
+def get_mouse_button(
+    active_buttons: set[Button], mouse: tuple[int, int]
+) -> Button | None:
+    """Return the active button under the mouse, or None."""
     for button in active_buttons:
         if button.rectangle.collidepoint(mouse):
             return button
@@ -149,49 +231,72 @@ def get_mouse_button(active_buttons, mouse):
     return None
 
 
-def make_buttons():
+def make_buttons() -> set[Button]:
+    """Return the buttons that are always shown (NEW GAME)."""
     buttons = set()
-    new_game = Button("NEW GAME", (HEIGHT + int(PANEL_WIDTH * 0.05), int(9.5 * HEIGHT / 10)), (int(PANEL_WIDTH * 0.9), int(HEIGHT / 25)))
+    new_game = Button(
+        "NEW GAME",
+        (HEIGHT + int(PANEL_WIDTH * 0.05), int(9.5 * HEIGHT / 10)),
+        (int(PANEL_WIDTH * 0.9), int(HEIGHT / 25)),
+    )
     buttons.add(new_game)
 
     return buttons
 
 
-def show_piece_buttons(screen, active_buttons):
+def show_piece_buttons(screen: pygame.Surface, active_buttons: set[Button]) -> None:
+    """Show the MOVE and USE POWER buttons."""
     MOVE_BUTTON.draw(screen)
     POWER_BUTTON.draw(screen)
     active_buttons.add(MOVE_BUTTON)
     active_buttons.add(POWER_BUTTON)
 
-def show_move_button(screen, active_buttons):
+
+def show_move_button(screen: pygame.Surface, active_buttons: set[Button]) -> None:
+    """Show the MOVE button."""
     MOVE_BUTTON.draw(screen)
     active_buttons.add(MOVE_BUTTON)
 
-def show_end_turn_button(screen, active_buttons):
+
+def show_end_turn_button(screen: pygame.Surface, active_buttons: set[Button]) -> None:
+    """Show the END TURN button."""
     END_TURN_BUTTON.draw(screen)
     active_buttons.add(END_TURN_BUTTON)
 
-def show_power_button(screen, active_buttons):
+
+def show_power_button(screen: pygame.Surface, active_buttons: set[Button]) -> None:
+    """Show the USE POWER button."""
     POWER_BUTTON.draw(screen)
     active_buttons.add(POWER_BUTTON)
 
-def show_confirm_button(screen, active_buttons):
+
+def show_confirm_button(screen: pygame.Surface, active_buttons: set[Button]) -> None:
+    """Show the CONFIRM button."""
     CONFIRM_BUTTON.draw(screen)
     active_buttons.add(CONFIRM_BUTTON)
 
-def show_reset_selection_button(screen, active_buttons):
+
+def show_reset_selection_button(
+    screen: pygame.Surface, active_buttons: set[Button]
+) -> None:
+    """Show the RESET SELECTION button."""
     RESET_SELECTION_BUTTON.draw(screen)
     active_buttons.add(RESET_SELECTION_BUTTON)
 
-def show_back_button(screen, active_buttons):
+
+def show_back_button(screen: pygame.Surface, active_buttons: set[Button]) -> None:
+    """Show the BACK button."""
     BACK_BUTTON.draw(screen)
     active_buttons.add(BACK_BUTTON)
 
-def hide_back_button(screen, active_buttons):
+
+def hide_back_button(screen: pygame.Surface, active_buttons: set[Button]) -> None:
+    """Hide the BACK button."""
     hide_button(BACK_BUTTON, screen, active_buttons)
 
 
-def hide_piece_buttons(screen, active_buttons):
+def hide_piece_buttons(screen: pygame.Surface, active_buttons: set[Button]) -> None:
+    """Hide every button used during a turn, including power and choice buttons."""
     hide_button(MOVE_BUTTON, screen, active_buttons)
     hide_button(POWER_BUTTON, screen, active_buttons)
     hide_button(END_TURN_BUTTON, screen, active_buttons)
@@ -202,7 +307,9 @@ def hide_piece_buttons(screen, active_buttons):
     hide_power_buttons(screen, active_buttons)
     hide_choice_buttons(screen, active_buttons)
 
-def hide_power_buttons(screen, active_buttons):
+
+def hide_power_buttons(screen: pygame.Surface, active_buttons: set[Button]) -> None:
+    """Hide all power buttons."""
     buttons_to_remove = []
     for button in active_buttons:
         if type(button) == PowerButton:
@@ -211,7 +318,9 @@ def hide_power_buttons(screen, active_buttons):
     for button in buttons_to_remove:
         hide_button(button, screen, active_buttons)
 
-def hide_choice_buttons(screen, active_buttons):
+
+def hide_choice_buttons(screen: pygame.Surface, active_buttons: set[Button]) -> None:
+    """Hide all choice buttons."""
     buttons_to_remove = []
     for button in active_buttons:
         if type(button) == ChoiceButton:
@@ -220,45 +329,62 @@ def hide_choice_buttons(screen, active_buttons):
     for button in buttons_to_remove:
         hide_button(button, screen, active_buttons)
 
-def hide_move_button(screen, active_buttons):
+
+def hide_move_button(screen: pygame.Surface, active_buttons: set[Button]) -> None:
+    """Hide the MOVE button."""
     hide_button(MOVE_BUTTON, screen, active_buttons)
 
-def hide_power_button(screen, active_buttons):
+
+def hide_power_button(screen: pygame.Surface, active_buttons: set[Button]) -> None:
+    """Hide the USE POWER button."""
     hide_button(POWER_BUTTON, screen, active_buttons)
 
-def show_power_choice_button(screen, active_buttons, button):
+
+def show_power_choice_button(
+    screen: pygame.Surface, active_buttons: set[Button], button: Button
+) -> None:
+    """Show a power or choice button."""
     button.draw(screen)
     active_buttons.add(button)
 
-def show_remove_barrier_button(screen, active_buttons):
 
+def show_remove_barrier_button(
+    screen: pygame.Surface, active_buttons: set[Button]
+) -> None:
+    """Show the REMOVE BARRIER button."""
     REMOVE_BARRIER_BUTTON.draw(screen)
     active_buttons.add(REMOVE_BARRIER_BUTTON)
 
-def show_place_barrier_button(screen, active_buttons):
 
+def show_place_barrier_button(
+    screen: pygame.Surface, active_buttons: set[Button]
+) -> None:
+    """Show the PLACE BARRIER button."""
     PLACE_BARRIER_BUTTON.draw(screen)
     active_buttons.add(PLACE_BARRIER_BUTTON)
 
-def hide_remove_barrier_button(screen, active_buttons):
+
+def hide_remove_barrier_button(
+    screen: pygame.Surface, active_buttons: set[Button]
+) -> None:
+    """Hide the REMOVE BARRIER button."""
     hide_button(REMOVE_BARRIER_BUTTON, screen, active_buttons)
 
-def hide_place_barrier_button(screen, active_buttons):
+
+def hide_place_barrier_button(
+    screen: pygame.Surface, active_buttons: set[Button]
+) -> None:
+    """Hide the PLACE BARRIER button."""
     hide_button(PLACE_BARRIER_BUTTON, screen, active_buttons)
 
-def hide_button(button, screen, active_buttons):
+
+def hide_button(
+    button: Button, screen: pygame.Surface, active_buttons: set[Button]
+) -> None:
+    """Remove button from the active buttons and erase it from the screen."""
     try:
         active_buttons.remove(button)
     except KeyError:
         pass
 
     button.erase_button(screen)
-
-
-
-
-
-
-
-
-

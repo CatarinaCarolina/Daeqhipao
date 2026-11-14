@@ -21,3 +21,21 @@ build-backend = "uv_build"
 [tool.uv.build-backend]
 module-root = ""
 wheel-exclude = ["**/.DS_Store", "**/*.ai"]
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.0",
+    "ruff>=0.17.2",
+]
+
+[tool.ruff.lint]
+# Ruff's defaults plus: import order, modern syntax, bug-prone patterns, docstrings, no star imports
+extend-select = ["I", "UP", "B", "D", "F403", "F405"]
+ignore = ["D105", "D107"]  # magic methods; __init__ arguments are documented in the class docstring
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+files = ["daeqhipao"]
+strict = true

@@ -1,13 +1,27 @@
-import pygame
-from pygame.locals import *
+"""Entry point: sets up a two-player game and runs the game loop."""
 
-from daeqhipao.board import Board
-from daeqhipao.pieces import *
-from daeqhipao.players import *
-from daeqhipao.side_panel import SidePanel
-from daeqhipao.buttons import *
-from daeqhipao.turn_management import TurnManager
+import pygame
+from pygame.locals import MOUSEBUTTONDOWN, QUIT
+
 from daeqhipao.barriers import BARRIERS
+from daeqhipao.board import Board
+from daeqhipao.buttons import highlight_buttons
+from daeqhipao.pieces import (
+    Alchemist,
+    Builder,
+    Drought,
+    Earth,
+    Flame,
+    Illusion,
+    Metamorphosis,
+    Pieces,
+    Sky,
+    Time,
+    Void,
+)
+from daeqhipao.players import Player
+from daeqhipao.side_panel import SidePanel
+from daeqhipao.turn_management import TurnManager
 
 size = 1200, 800
 width, height = size
@@ -16,7 +30,8 @@ RED = (255, 0, 0)
 WHITE = (255, 255, 255)
 
 
-def main():
+def main() -> None:
+    """Open the game window and run the game until it is closed."""
     pygame.init()
     screen = pygame.display.set_mode(size)
     screen.fill(WHITE)
@@ -24,8 +39,6 @@ def main():
     side_panel = SidePanel(screen)
     board.draw_frame()
     side_panel.draw_panel()
-
-    active_buttons = make_buttons()
 
     player_1 = Player(1)
     player_3 = Player(3)
@@ -63,15 +76,27 @@ def main():
     piece_10 = Flame(10, player_3)
     piece_10.set_location((7, 1), board)
 
-    #pieces = Pieces([piece_1, piece_2, piece_3, piece_4, piece_5, piece_6, piece_7, piece_8])
+    # pieces = Pieces([piece_1, piece_2, piece_3, piece_4, piece_5, piece_6, piece_7, piece_8])
 
-    pieces = Pieces([piece_1, piece_2, piece_3, piece_4, piece_5, piece_6, piece_7, piece_8, piece_9, piece_10])
+    pieces = Pieces(
+        [
+            piece_1,
+            piece_2,
+            piece_3,
+            piece_4,
+            piece_5,
+            piece_6,
+            piece_7,
+            piece_8,
+            piece_9,
+            piece_10,
+        ]
+    )
     players = [player_1, player_3]
 
     turn_manager = TurnManager(players, board, screen, pieces, BARRIERS)
 
     running = True
-
 
     while running:
         for event in pygame.event.get():
@@ -88,7 +113,10 @@ def main():
             board.highlight_field(mouse)
         else:
             if turn_manager.hover:
-                turn_manager.power.highlight_hover(screen, board, turn_manager.current_target_fields, mouse)
+                assert turn_manager.power is not None
+                turn_manager.power.highlight_hover(
+                    screen, board, turn_manager.current_target_fields, mouse
+                )
 
         highlight_buttons(turn_manager.active_buttons, screen, mouse)
         pygame.display.update()

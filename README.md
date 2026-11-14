@@ -28,6 +28,7 @@ uv run daeqhipao
 
 - Add a dependency: `uv add <package>` (updates `pyproject.toml` and `uv.lock`)
 - Run any command inside the environment: `uv run <command>`, e.g. `uv run python`
+- Coding standards and the checks to run before committing: see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 # Contributions
 
